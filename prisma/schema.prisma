@@ -1,0 +1,138 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Brand {
+  id       String    @id @default(uuid())
+  name     String
+  origin   String?
+  logoUrl  String?   @map("logourl")
+  consoles Console[]
+
+  @@map("brand")
+}
+
+model Console {
+  id         String  @id @default(uuid())
+  name       String
+  shortName  String  @map("short_name")
+  brandId    String  @map("id_brand")
+  year       String?
+  generation String?
+  isPortable Boolean? @map("is_portable")
+  logoUrl    String?  @map("logourl")
+  consoleUrl String?  @map("consoleurl")
+  brand      Brand    @relation(fields: [brandId], references: [id], onDelete: Cascade)
+  games      Game[]
+
+  @@index([brandId])
+  @@map("console")
+}
+
+model Genre {
+  id    String      @id @default(uuid())
+  name  String
+  games GameGenre[]
+
+  @@map("genre")
+}
+
+model Game {
+  id         String  @id @default(uuid())
+  title      String
+  consoleId  String  @map("id_console")
+  saga       Json?
+  year       String?
+  developer  String?
+  publisher  String?
+  isNew      Boolean? @map("is_new")
+  isComplete Boolean? @map("is_complete")
+  isWishlist Boolean? @map("is_wishlist")
+  isDigital  Boolean? @map("is_digital")
+  notes      String?  @db.Text
+  coverUrl   String?  @map("coverurl")
+  isFinished Boolean? @map("is_finished")
+  isBacklog  Boolean? @map("is_backlog")
+  isPlaying  Boolean? @map("is_playing")
+  console    Console   @relation(fields: [consoleId], references: [id], onDelete: Cascade)
+  genres     GameGenre[]
+
+  @@index([consoleId])
+  @@index([title])
+  @@map("game")
+}
+
+model GameGenre {
+  id      Int    @id @default(autoincrement())
+  gameId  String @map("id_game")
+  genreId String @map("id_genre")
+  game    Game   @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  genre   Genre  @relation(fields: [genreId], references: [id], onDelete: Cascade)
+
+  @@index([genreId])
+  @@map("game_x_genre")
+}
+
+model User {
+  id            String    @id @default(uuid())
+  name          String
+  lastname      String?
+  username      String    @unique
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  role          String?
+  refreshToken  String?   @map("refresh_token")
+  accounts      Account[]
+  sessions      Session[]
+
+  @@map("user")
+}
+
+// NextAuth v5 models
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String  @map("user_id")
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("account")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id")
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("session")
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_token")
+}
