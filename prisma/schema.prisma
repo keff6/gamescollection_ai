@@ -18,10 +18,10 @@ model Brand {
 }
 
 model Console {
-  id         String  @id @default(uuid())
+  id         String   @id @default(uuid())
   name       String
-  shortName  String  @map("short_name")
-  brandId    String  @map("id_brand")
+  shortName  String   @map("short_name")
+  brandId    String   @map("id_brand")
   year       String?
   generation String?
   isPortable Boolean? @map("is_portable")
@@ -43,28 +43,38 @@ model Genre {
 }
 
 model Game {
-  id         String  @id @default(uuid())
+  id         String      @id @default(uuid())
   title      String
-  consoleId  String  @map("id_console")
+  consoleId  String      @map("id_console")
   saga       Json?
   year       String?
   developer  String?
   publisher  String?
-  isNew      Boolean? @map("is_new")
-  isComplete Boolean? @map("is_complete")
-  isWishlist Boolean? @map("is_wishlist")
-  isDigital  Boolean? @map("is_digital")
-  notes      String?  @db.Text
-  coverUrl   String?  @map("coverurl")
-  isFinished Boolean? @map("is_finished")
-  isBacklog  Boolean? @map("is_backlog")
-  isPlaying  Boolean? @map("is_playing")
-  console    Console   @relation(fields: [consoleId], references: [id], onDelete: Cascade)
+  status     GameStatus  @default(OWNED)
+  rating     Int?
+  isNew      Boolean?    @map("is_new")
+  isComplete Boolean?    @map("is_complete")
+  isWishlist Boolean?    @map("is_wishlist")
+  isDigital  Boolean?    @map("is_digital")
+  notes      String?     @db.Text
+  coverUrl   String?     @map("coverurl")
+  isFinished Boolean?    @map("is_finished")
+  isBacklog  Boolean?    @map("is_backlog")
+  isPlaying  Boolean?    @map("is_playing")
+  console    Console     @relation(fields: [consoleId], references: [id], onDelete: Cascade)
   genres     GameGenre[]
 
   @@index([consoleId])
   @@index([title])
   @@map("game")
+}
+
+enum GameStatus {
+  WISHLIST
+  BACKLOG
+  OWNED
+  PLAYING
+  COMPLETED
 }
 
 model GameGenre {
