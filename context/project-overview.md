@@ -1,212 +1,173 @@
-# GamesCollectio — Project Overview
+# PRD: GamesCollection
 
-> **A Tracking application for videogame collections with easy search and metrics.**
-
----
-
-## Table of Contents
-
-- [Problem](#problem)
-- [Target Users](#target-users)
-- [Tech Stack](#tech-stack)
-- [Features](#features)
-- [Data Models](#data-models)
-- [UI/UX](#uiux)
-- [Monetization](#monetization)
+**Status:** Draft
+**Owner:** (you)
+**Last updated:** 2026-08-19
 
 ---
 
-## Problem
+## 1. Summary
 
-People who collect games need a cleaer faster way to track their collection.
+GamesCollection is a personal web app for cataloging a physical/digital video game
+collection — organized by brand → console → game — with a dashboard for at-a-glance
+stats and a simple admin area for managing the catalog. Single-user, no public sign-up.
 
----
+## 2. Problem statement
 
-## Target Users
+Tracking a game collection across spreadsheets or memory doesn't scale and gives no
+visibility into the shape of the collection (what's owned vs. wishlisted, genre spread,
+platform spread, completion progress). This app replaces that with a structured,
+browsable, self-hosted catalog.
 
-| User | Core Need |
-|---|---|
-| **Collector** | Add search and update collection |
+## 3. Goals
 
----
+- Browse the full collection by Brand → Console → Game, matching the reference UI
+- See collection-wide stats (totals, completion %, genre/platform breakdown) on a dashboard
+- Add/edit/delete brands, consoles, games, and genres through an admin area
+- Gate write actions behind a simple login (single user, no public registration)
+- Ship a clean, dark-themed, responsive UI matching the provided screenshots
 
-## Tech Stack
+## 4. Non-goals (explicitly out of scope for v1)
 
-| Layer | Technology |
-|---|---|
-| **Framework** | [Next.js 16](https://nextjs.org/) + [React 19](https://react.dev/) |
-| **Language** | TypeScript |
-| **Database** | [Neon](https://neon.tech/) (PostgreSQL) |
-| **ORM** | [Prisma 7](https://www.prisma.io/docs) |
-| **Auth** | [NextAuth v5](https://authjs.dev/) — Email/password |
-| **AI** | OpenAI `gpt-4o-mini` |
-| **CSS** | [Tailwind CSS v4](https://tailwindcss.com/) + [shadcn/ui](https://ui.shadcn.com/) |
-| **Caching** | Redis *(optional)* |
-| **Rendering** | SSR pages with dynamic components |
+- Multi-user support, roles/permissions, public registration, or social features
+  (sharing, following other collectors, etc.)
+- Cover-image upload/hosting pipeline — `coverUrl` exists on `Game` but populating it
+  is not part of v1's UI (may be pasted-URL only, or deferred entirely)
+- Barcode scanning, third-party catalog import (e.g. IGDB/MobyGames sync), or price
+  tracking/valuation
+- The `saga` field's use case (game series grouping) — present in the schema, no
+  UI defined for it yet
+- Mobile native app — responsive web only
+- Automated tests / CI — no test runner is configured yet per `CLAUDE.md`; add later
+  if desired, not required for v1
 
-> ⚠️ **Database rule:** Never use `db push`. Always create and run explicit migrations in dev before promoting to prod.
+## 5. Target user
 
----
+One person: the collection owner. The app is built for personal use, not for
+distribution to other collectors. "Auth" exists only to gate destructive actions
+(add/edit/delete) behind a login on a device someone else might use — it's not a
+security boundary against the internet at large.
 
-## Features
+## 6. Scope / Feature list
 
-### A. Items & Item Types
+| Area | Description | Auth required |
+|---|---|---|
+| Dashboard (`/`) | Stats + charts overview of the collection | No (view only) |
+| Brands (`/brands`) | Card grid of all brands, links to consoles | No (view only) |
+| Consoles (`/brands/[brandId]`) | Consoles for a brand, filterable by type | No (view only) |
+| Games (`/consoles/[consoleId]`) | Games for a console, search/sort, add/edit modal | View: no. Add/edit/delete: yes |
+| Login (`/login`) | Single-user credential login | N/A |
+| Admin (`/admin/*`) | CRUD for Brands, Consoles, Games, Genres | Yes, all actions |
+| Navbar | Home / Brands / Admin / logged-in-user indicator, present on every page | N/A |
 
-Items are the core unit in GameesCollection. Each item has a **type** that determines its behavior.
+## 7. User stories
 
----
+- As the collection owner, I can see a dashboard summarizing my whole collection so I
+  know its size and shape without digging through pages.
+- As the collection owner, I can drill from a brand into its consoles into its games,
+  so I can browse the way I naturally think about my shelf.
+- As the collection owner, I can search and sort games within a console so I can find
+  a specific title quickly as the list grows.
+- As the collection owner, I can log in and add/edit/delete a game (with status, rating,
+  genre, developer/publisher, notes) so my catalog stays accurate over time.
+- As the collection owner, I can manage brands, consoles, and genres from an admin area
+  so I'm not limited to whatever was in the seed data.
+- As the collection owner, if I'm not logged in, I can still browse everything — I just
+  can't change anything.
 
-### C. Search
+## 8. Functional requirements
 
-Full-text search across:
-- Item title
-- Item content
-- Tags
-- Item type
+### 8.1 Browsing (public, no auth)
+- Brands page lists every brand with its console count
+- Consoles page lists a brand's consoles, filterable by Home/Portable, with each
+  console's game count
+- Games page lists a console's games with search-by-title and sort (Title/Year/Rating)
+- All pages show correct empty states when there's no data yet
 
----
+### 8.2 Dashboard (public, no auth)
+- Total games, completed count (+ %), now-playing count, brand/console counts
+- Genre breakdown (pie chart), platform breakdown (bar chart)
+- Status breakdown (Wishlist/Backlog/Owned/Playing/Completed)
 
-### D. Authentication
+### 8.3 Authentication
+- Single seeded user, username + password login via NextAuth Credentials provider
+- Session persists across page reloads until logout
+- Logged-out users attempting a write action are redirected to `/login`
 
-- Email + password
+### 8.4 Admin CRUD
+- Full create/read/update/delete for Brand, Console, Game, Genre
+- Game create/edit reuses the Add Game modal (title, genre(s), status, year, rating,
+  developer, publisher, notes)
+- Deleting a Brand cascades to its Consoles and their Games (already enforced at the DB
+  level via `onDelete: Cascade`) — UI must confirm this destructive action before it fires
 
----
+### 8.5 Navbar
+- Present on every route: logo/wordmark, Home/Brands/Dashboard links (Admin link shown
+  once logged in), login state indicator, Log In/Log Out action
 
-### E. General Features
+## 9. Data model (summary)
 
-- Dashboard that includes first hand information and graphs fron the collection data
-- Search for ay game
-- Brands CRUD
-- Consoles CRUD
-- Games CRUD
-- Game Genre CRUD
-- Export data (csv)
-- Dark mode default
+Already implemented in Prisma (Postgres via Neon), see `schema.prisma`:
+`Brand` → `Console` → `Game` ← (many-to-many) → `Genre` via `GameGenre`; `User` with
+NextAuth `Account`/`Session`/`VerificationToken` support.
 
----
+**v1 migration required:** add `status` (`GameStatus` enum) and `rating` (`Int?`) to
+`Game` — see `specs/00-schema-review.md` for the exact change and the reasoning
+(replaces 7 overlapping booleans with one authoritative status).
 
+## 10. Non-functional requirements
 
-## Data Models
+- **Stack:** Next.js 16 (App Router), React 19, TypeScript 5, Tailwind CSS v4, Prisma, shadcn, react-hook-form, zod,
+  Postgres (Neon) — per `CLAUDE.md`
+- **Performance:** no specific target (personal-scale data, low hundreds of rows) —
+  standard Next.js server-rendering is sufficient, no special caching/pagination
+  strategy needed at this scale
+- **Accessibility:** modal (Add/Edit Game) must be keyboard-operable (Esc to close,
+  focus trapped) — no broader a11y audit scoped for v1
+- **Browser support:** modern evergreen browsers only
+- **Deployment:** Vercel
 
-### Prisma Schema
+## 11. Success criteria
 
-```prisma
-generator client {
-  provider = "prisma-client-js"
-}
+Since this is a personal tool, "success" is functional completeness against the
+screenshots and feature list, not growth/engagement metrics:
 
-datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
+- All five reference screens (dashboard, brands, consoles, games, add-game form) are
+  implemented and visually match the provided designs
+- Full CRUD works for all four entities from the admin area
+- Login gates write actions correctly; browsing works fully logged-out
+- The owner actually uses it to replace their existing tracking method
 
-model Brand {
-  id       String    @id @default(uuid())
-  name     String
-  origin   String?
-  logoUrl  String?   @map("logourl")
-  consoles Console[]
+## 12. Open questions
 
-  @@map("brand")
-}
+Carried over from spec review — resolve before or during implementation:
 
-model Console {
-  id          String   @id @default(uuid())
-  name        String
-  shortName   String   @map("short_name")
-  brandId     String   @map("id_brand")
-  year        String?
-  generation  String?
-  isPortable  Boolean? @map("is_portable")
-  logoUrl     String?  @map("logourl")
-  consoleUrl  String?  @map("consoleurl")
-  brand       Brand    @relation(fields: [brandId], references: [id])
-  games       Game[]
+1. Keep `Game`'s 7 status booleans, or migrate to a single `status` enum? (recommended:
+   migrate — see `specs/00-schema-review.md`)
+2. Genre field on the Add Game form: single-select or multi-select? (game cards display
+   multiple genres, so schema supports many-to-many already)
+3. Are "Add Brand/Console/Game" buttons hidden for logged-out users, or shown but
+   redirect to login?
+4. What does the "4 / 23" Brands/Consoles dashboard stat actually mean (brands *with
+   games* vs. total brands)?
+5. What is the `saga` field for, and does it need UI in v1 or a later phase?
+6. Deployment target — Vercel.
 
-  @@map("console")
-}
+## 13. Milestones
 
-model Genre {
-  id    String        @id @default(uuid())
-  name  String
-  games GameGenre[]
+See `ROADMAP.md` for the full phased task breakdown. Summary:
 
-  @@map("genre")
-}
+1. **Foundation** — schema fixes, seed data, app shell/navbar
+2. **Public browsing** — dashboard, brands, consoles, games pages
+3. **Auth** — login + route protection
+4. **Admin CRUD** — Brands, Genres, Consoles, Games
+5. **Polish** — empty/loading/error states, responsive pass, validation
 
-model Game {
-  id          String      @id @default(uuid())
-  title       String
-  consoleId   String      @map("id_console")
-  saga        Json?
-  year        String?
-  developer   String?
-  publisher   String?
-  isNew       Boolean?    @map("is_new")
-  isComplete  Boolean?    @map("is_complete")
-  isWishlist  Boolean?    @map("is_wishlist")
-  isDigital   Boolean?    @map("is_digital")
-  notes       String?     @db.Text
-  coverUrl    String?     @map("coverurl")
-  isFinished  Boolean?    @map("is_finished")
-  isBacklog   Boolean?    @map("is_backlog")
-  isPlaying   Boolean?    @map("is_playing")
-  console     Console     @relation(fields: [consoleId], references: [id])
-  genres      GameGenre[]
+## 14. References
 
-  @@map("game")
-}
-
-model GameGenre {
-  id      Int    @id @default(autoincrement())
-  gameId  String @map("id_game")
-  genreId String @map("id_genre")
-  game    Game   @relation(fields: [gameId], references: [id])
-  genre   Genre  @relation(fields: [genreId], references: [id])
-
-  @@index([genreId])
-  @@map("game_x_genre")
-}
-
-model User {
-  id           String  @id @default(uuid())
-  name         String
-  lastname     String?
-  username     String
-  password     String
-  role         String?
-  refreshToken String? @map("refresh_token")
-
-  @@map("user")
-}
-```
-
----
-
-
-## UI/UX
-
-### Layout
-:TODO
-
-### Design Principles
-
-- Modern, minimal, gamer-focused
-- **Dark mode default**
-- Clean typography, generous whitespace, subtle borders and shadows
-- References: [Notion](https://notion.so), [Linear](https://linear.app), [Raycast](https://www.raycast.com)
-
-### Screenshots
-
-Refer to the screenshots below for the dashboard ui design. It does not have to be exact, just a reference:
-:TODO
-
-### Micro-interactions
-
-- Smooth drawer transitions
-- Hover states on cards
-- Toast notifications for all actions
-- Loading skeleton screens
-
----
-
+- `CLAUDE.md` — repo conventions and stack
+- `schema.prisma` — current data model
+- `ROADMAP.md` — phased task breakdown
+- `specs/*.md` — per-feature implementation specs
+- Screenshots: `dashboard-opt1.png`, `brands-opt1.png`, `consoles-opt1.png`,
+  `games-opt1.png`, `forms-opt1.png`

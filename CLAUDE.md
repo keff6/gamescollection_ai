@@ -32,6 +32,9 @@ No test runner is configured yet.
 
 - **Next.js 16.2.9** with the App Router — this is a newer major version with breaking changes; read `node_modules/next/dist/docs/` before writing Next.js-specific code
 - **React 19.2.4**
+- **shadcn**
+- **react-hook-from**
+- **zod**
 - **TypeScript 5**
 - **Tailwind CSS v4** via `@tailwindcss/postcss` — configured in `postcss.config.mjs`, imported with `@import "tailwindcss"` in `globals.css` (no `tailwind.config.*` file)
 - **ESLint 9** via `eslint-config-next`
@@ -54,6 +57,10 @@ New routes are added as `src/app/<segment>/page.tsx`. Shared UI components shoul
 - **Target branch:** `production` — branch ID `br-dawn-lab-ahyhcal9`
 
 When using the Neon MCP tools, always use project ID `odd-flower-50737451` and branch ID `br-dawn-lab-ahyhcal9` (development) unless explicitly asked to query production.
+
+## Deployment
+
+Project should be deployed at the end of development to Vercel
 
 
 
