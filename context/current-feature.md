@@ -1,16 +1,32 @@
-# Current Feature
+# Current Feature: Dashboard
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- What does success look like? -->
+- Build the home route (`/`) as a read-only, at-a-glance overview of the whole collection
+- 4 stat cards: Total Games, Completed (+% of total), Now Playing, Brands / Consoles ("4 / 23")
+- "By Genre" pie chart (teal-toned palette, name + % labels) via `GameGenre` join, % of total genre-tag rows
+- "By Platform" bar chart — games per console `shortName`, all consoles with ≥1 game
+- "Games Condition" donut — one game bucketed into Digital > New > Complete > Incomplete (priority order), % in center, legend only shows present buckets
+- "Top 5 Consoles by Games" horizontal bar chart — console full `name`, count desc, top 5, teal-monochrome (not multi-color like screenshot mockup)
+- Layout: 2x2 stat grid, then two 2-column chart rows (By Genre/By Platform, then Games Condition/Top 5 Consoles)
+- Handle loading (skeletons), empty (zero games), and error (DB failure) states gracefully without crashing
+- Page is read-only — links out to brands/consoles/games for management, no editing here
 
 ## Notes
 
-<!-- Additional context, constraints, or details from spec -->
+- Source spec: `context/feature/03-dashboard.md`
+- Setup work included in this feature: install `recharts` (not yet installed); run `npx shadcn init` + add `card` component (shadcn not yet initialized, no `components.json`)
+- Brands/Consoles stat = plain totals (all brands, all consoles), NOT filtered to "has ≥1 game"
+- No separate GameStatus (Wishlist/Backlog/etc.) breakdown section — resolved as not needed, page ends after the 4 chart cards
+- Games Condition bucket priority is strict: `isDigital` > `isNew` > `isComplete` > else Incomplete
+- Depends on: `00-schema-review.md`, `01-seed-data.md`, `02-app-shell-navbar.md` (all already done per History below)
+- Reference screenshots: `context/screenshots/dashboard.png` (stat cards + row 1), `dashboard-2.png` (row 2)
+- Deviation from spec: "By Platform" bars are sorted by console `year` ascending (oldest → newest), not count desc as the original acceptance criteria stated — changed per explicit user request after initial implementation. Consoles with an unparseable/missing `year` sort last.
+- Added Vitest (`vitest.config.mts`, `npm test`) — first test runner in the repo, since CLAUDE.md previously said none was configured. `npm test` requires Node ≥ the `.nvmrc`-pinned `25.6.1` (vitest's rolldown bundler needs a `node:util` export not present in the local default `20.11.1`) — same constraint that was already true for Prisma. Extracted the dashboard's aggregation logic (`buildGenreBreakdown`, `buildPlatformBreakdown`, `buildTop5Consoles`, `buildConditionBreakdown`, `bucketCondition`) out of `getDashboardStats` into pure, individually-exported functions in `lib/dashboard.ts` so they're unit-testable without mocking Prisma; behavior is unchanged. 24 unit tests added across `lib/dashboard.test.ts` and `lib/chart-colors.test.ts`, all passing.
 
 ## History
 
