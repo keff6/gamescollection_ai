@@ -1,39 +1,16 @@
-# Current Feature: Games Page (+ Add/Edit Game Form)
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Build `/consoles/[consoleId]/games` — list every game tracked for a console, with search,
-  sort, and paginated "Show More" loading
-- Game cards (stacked list): title + rating badge, YEAR / GENRE / DEVELOPER-PUBLISHER row
-- "Showing results X / Y" counter reflecting games loaded so far
-- Build the Add/Edit Game modal UI (title, genre multi-select, owned/wishlist toggle,
-  media status radios, playable status checkboxes, year, rating, developer, publisher,
-  notes) — form UI only, no real persistence yet (mutation wired later in
-  `12-games-crud.md`, Phase 3, once auth exists)
-- "+ Add Game" button hidden for logged-out users; read-only list works fully logged-out
-- Handle loading/empty/no-results/loading-next-batch/validation/submit-success/
-  submit-failure states
+<!-- What does success look like? -->
 
 ## Notes
 
-- Spec: `context/feature/06-games-page.md`
-- **Pagination**: batches of 25 via `take: 25, skip: loadedCount`, current sort order;
-  "Show More" button appends next batch and hides when exhausted; search/sort changes
-  reset back to the first batch
-- Status fields have no enum yet — form writes directly to the 7 booleans
-  (`isWishlist`, `isComplete`/`isNew`/`isDigital`, `isBacklog`/`isPlaying`/`isFinished`)
-  per `00-schema-review.md`; media status radios are mutually exclusive, playable status
-  checkboxes allow any combination, both shown only when marked Owned
-- Genre is many-to-many (`GameGenre`) — multi-select, not the mock's single `<select>`
-- Rating must be validated 1-10 client-side
-- Modal must be keyboard-accessible (Esc closes, focus trapped)
-- Reused for edit: same modal, pre-filled, "Add" button becomes "Save"
-- Dependencies: `00-schema-review.md` (rating field), `01-seed-data.md`,
-  `02-app-shell-navbar.md`, `05-consoles-page.md` (incoming link from consoles page)
+<!-- Additional context, constraints, or details from spec -->
 
 ## History
 
@@ -46,3 +23,4 @@ In Progress
 - **2026-08-19** — Dashboard: built the home route (`/`) as a read-only overview — 4 stat cards (Total Games, Completed + % of total, Now Playing, Brands/Consoles as plain totals), "By Genre" pie chart (teal-shade ramp, top 7 genres + folded "Other" bucket to avoid label clutter — real data has 24 genres, screenshot mock only had 6), "By Platform" bar chart, "Games Condition" donut (priority `isDigital` > `isNew` > `isComplete` > else Incomplete, dominant-bucket % in center), and "Top 5 Consoles by Games" bar (teal-monochrome). Data layer in `lib/dashboard.ts` (`getDashboardStats` plus pure, individually-tested aggregation functions), chart components in `components/dashboard/` using `recharts`. Initialized `shadcn` (`card`, `button`) for the first time in this repo — its init overwrote the navbar feature's custom dark teal theme in `globals.css` with shadcn's default light palette, caught and restored (kept the teal palette, merged in the additional tokens shadcn's components need). Fixed a recharts gotcha where a `percent` field on our own data objects collided with recharts' internal pie-label `percent` prop, corrupting displayed percentages. "By Platform" sort was changed from count-desc (the original spec/acceptance-criteria) to console-year ascending (oldest → newest) per explicit user request after initial implementation. Added Vitest as the repo's first test runner (`vitest.config.mts`, `npm test` — requires Node ≥ the `.nvmrc`-pinned `25.6.1`, same constraint as Prisma) with 24 unit tests over the extracted aggregation functions. Separately, centered the root layout's `<main>` at `max-w-330` (1320px). Verified against the real seeded dataset (1504 games) via headless-Chromium screenshots at desktop/mobile widths, `npm run lint`, `npm run build`, and `npm test`.
 - **2026-08-20** — Brands Page: built `/brands` as a read-only, 2-column responsive card grid of every `Brand` with its `Console` count (`lib/brands.ts`, `getBrandsWithConsoleCounts`), each card linking to `/brands/[brandId]` (not yet built — next in the roadmap). Added a stubbed "Add Brand" modal (`components/brands/AddBrandDialog.tsx`) with Name/Origin fields and a no-op submit handler — the real create mutation is deferred to brands CRUD once auth exists. Gated the "+ Add Brand" button behind a module-level `isLoggedIn = false` constant since auth isn't wired yet, mirroring the Navbar's existing pre-auth stub. First use of a modal/Dialog in this repo — added shadcn `dialog`, `input`, and `label` components via the CLI (no theme regressions this time, unlike the dashboard's shadcn-init incident). Handles loading (skeleton grid), empty, and error states following the dashboard's established pattern. Verified against the real seeded dataset (7 brands, 27 consoles) via headless-Chromium screenshots at desktop/mobile widths matching the `brands.png` reference exactly, plus `npm run lint`, `npm run build`, and the existing `npm test` suite (no new tests — `getBrandsWithConsoleCounts` is a thin Prisma passthrough with no branching logic worth unit-testing, unlike the dashboard's aggregation functions).
 - **2026-08-20** — Consoles Page: built `/brands/[brandId]` (`lib/consoles.ts`, `getBrandConsoles`) as a read-only 2-column card grid of a brand's `Console`s, each showing year/generation and a "View N Games" link to `/consoles/[consoleId]` (not yet built — next in the roadmap). Filter tabs (`All`/`Home`/`Portable`, `components/consoles/ConsoleFilterTabs.tsx`) use a `?type=` search param rendered server-side via `Link`, no client component needed. Consoles sort by year ascending (oldest → newest) rather than name — changed post-implementation per explicit user request, same precedent as the dashboard's "By Platform" chart. Added a stubbed "Add Console" modal (Name/Year/Generation, no-op submit) gated behind the same `isLoggedIn = false` stub as brands. Handles loading (skeleton), empty (zero consoles vs. zero after filtering — two distinct messages), not-found (`notFound()` + custom `app/brands/[brandId]/not-found.tsx`), and DB error states. During review, fixed the "View N Games" button text to teal (`text-accent`) to match `consoles.png` exactly (was plain foreground), and renamed a `console` variable to `consoleItem` in three files since it shadowed the global `console` object used for error logging in the same files. Verified against the real seeded dataset via headless-Chromium screenshots (desktop/mobile/filtered/404), `npm run lint`, `npm run build`, and the existing `npm test` suite (no new tests, same rationale as brands page). Flagged two data-only discrepancies left unfixed since they're not code bugs: the spec's acceptance-criteria Microsoft game counts (15/40/25/10) are stale against the live DB (actual 146/192/112/26, confirmed via direct Prisma query), and the seeded `generation` column only holds bare numbers ("6") vs. the reference mock's richer text ("6th (128 bits)") — no source data exists to derive the rest, so it wasn't fabricated.
+- **2026-08-20** — Games Page: built `/consoles/[consoleId]/games` (`lib/games.ts`, `getConsoleGames` + exported `sortGames`) as a search/sort/paginated games list — search-by-title (debounced client-side, synced to a `q` URL param), sort by Title/Year/Rating (`sort` URL param), and "Show More" pagination in batches of 25 (`GAMES_PAGE_SIZE`) via a colocated Server Action (`loadMoreGames`). Since `year` is a string column (same issue as the consoles page), sorting/pagination is done in-memory rather than at the DB level — acceptable at this app's personal-collection scale. Game cards (`components/games/GameCard.tsx`) show title, rating badge, and YEAR/GENRE/DEVELOPER-PUBLISHER columns. Built the Add/Edit Game modal (`components/games/GameFormDialog.tsx`) per spec — genre multi-select checkboxes, Owned/Wishlist toggle that conditionally shows/hides media-status radios (Incomplete/Complete/New/Digital) and playable-status checkboxes (Backlog/Playing/Finished), year/rating/developer/publisher/notes fields — form UI only, no real persistence yet (deferred to `12-games-crud.md`, Phase 3). Added shadcn `select`, `checkbox`, `radio-group`, `textarea`, `badge` (no theme regressions). Caught during browser testing: the form's native HTML `required`/`min`/`max` attributes were blocking submission with unstyled browser tooltips before the custom validation logic ever ran — fixed by adding `noValidate` to the form so the styled inline error messages actually render. Mid-implementation, restructured routes to be more descriptive per user request: `/brands/[brandId]` → `/brands/[brandId]/consoles` and `/consoles/[consoleId]` → `/consoles/[consoleId]/games` (old bare paths now 404, no redirect added — pre-launch personal app, no external links to preserve); updated all `Link` hrefs, the breadcrumb, the moved Server Action's import path, and the route mentions across `project-overview.md`/`ROADMAP.md`/the feature specs. Added `lib/games.test.ts` (4 tests) for `sortGames`'s branching logic (title/year/rating comparators, missing-year and unrated-game fallback ordering), following the same "test pure aggregation logic, skip thin Prisma passthroughs" precedent as the dashboard page. Verified against the real seeded dataset (PlayStation 4, 251 games) via headless-Chromium click-throughs (pagination, search, sort, modal validation, 404s, mobile layout) and `npm run lint`, `npm run build`, `npm test` (28/28 passing).
