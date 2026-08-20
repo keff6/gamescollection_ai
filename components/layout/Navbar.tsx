@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { UserMenu } from "@/components/auth/UserMenu";
 
 interface NavLink {
   href: string;
@@ -63,25 +64,6 @@ function LogInIcon({ className }: { className?: string }) {
   );
 }
 
-function LogOutIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-      <polyline points="16 17 21 12 16 7" />
-      <line x1="21" x2="9" y1="12" y2="12" />
-    </svg>
-  );
-}
-
 function MenuIcon({ className }: { className?: string }) {
   return (
     <svg
@@ -120,23 +102,14 @@ function XIcon({ className }: { className?: string }) {
 }
 
 function AuthAction({
-  isLoggedIn,
+  user,
   onNavigate,
 }: {
-  isLoggedIn: boolean;
+  user: NavbarUser | null;
   onNavigate?: () => void;
 }) {
-  if (isLoggedIn) {
-    return (
-      <button
-        type="button"
-        onClick={onNavigate}
-        className="flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
-      >
-        <LogOutIcon className="h-4 w-4" />
-        Log Out
-      </button>
-    );
+  if (user) {
+    return <UserMenu name={user.name} />;
   }
 
   return (
@@ -151,7 +124,11 @@ function AuthAction({
   );
 }
 
-export function Navbar({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
+interface NavbarUser {
+  name: string;
+}
+
+export function Navbar({ user = null }: { user?: NavbarUser | null }) {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [menuPathname, setMenuPathname] = useState(pathname);
@@ -196,7 +173,7 @@ export function Navbar({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
         </div>
 
         <div className="hidden md:block">
-          <AuthAction isLoggedIn={isLoggedIn} />
+          <AuthAction user={user} />
         </div>
 
         <button
@@ -238,7 +215,7 @@ export function Navbar({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
           </ul>
           <div className="mt-4 border-t border-border px-3 pt-4">
             <AuthAction
-              isLoggedIn={isLoggedIn}
+              user={user}
               onNavigate={() => setIsMenuOpen(false)}
             />
           </div>

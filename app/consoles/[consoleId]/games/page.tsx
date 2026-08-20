@@ -1,13 +1,11 @@
 import { notFound } from "next/navigation";
+import { auth } from "@/auth";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { GameFormDialog } from "@/components/games/GameFormDialog";
 import { GamesControls } from "@/components/games/GamesControls";
 import { GamesList } from "@/components/games/GamesList";
 import { GAMES_PAGE_SIZE, getConsoleGames, type GameSortKey } from "@/lib/games";
 import { getAllGenres } from "@/lib/genres";
-
-// No auth wired yet — defaults to logged-out, matching Brands/Consoles pages' stub.
-const isLoggedIn = false;
 
 function parseSort(raw: string | string[] | undefined): GameSortKey {
   return raw === "year" || raw === "rating" ? raw : "title";
@@ -24,6 +22,7 @@ export default async function ConsoleGamesPage({
   const { q, sort: sortParam } = await searchParams;
   const search = typeof q === "string" ? q : "";
   const sort = parseSort(sortParam);
+  const isLoggedIn = !!(await auth());
 
   let data;
   let genres;

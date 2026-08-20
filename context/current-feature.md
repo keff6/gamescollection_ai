@@ -1,16 +1,27 @@
-# Current Feature
+# Current Feature: Auth Middleware & Session-Aware UI
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- What does success look like? -->
+- `middleware.ts` protecting `/admin/:path*`, redirecting unauthenticated requests to `/login?callbackUrl=<original path>`
+- Navbar's login-state indicator wired to the real NextAuth session, replacing the `isLoggedIn` prop stub: "Log In" link when logged out, circular initials avatar when logged in — in both desktop and mobile layouts
+- Clicking the avatar opens a dropdown with a single "Log Out" item (`signOut()`); dismisses on outside click, Esc, or selection
+- Replace the module-level `isLoggedIn = false` stub constants on the brands, consoles, and games pages with a real `await auth()` check, so "+ Add Brand" / "+ Add Console" / "+ Add Game" buttons actually appear when logged in
 
 ## Notes
 
-<!-- Additional context, constraints, or details from spec -->
+- Spec: `context/feature/08-auth-middleware.md`
+- Out of scope: any `/admin/*` pages themselves (arrive in Phase 3); making the stubbed Add Brand/Console/Game modals actually submit/persist (each entity's CRUD spec); disabling write actions client-side beyond hiding the buttons
+- No schema changes — reads session only via `auth()` (from `07-auth-login.md`'s `auth.ts`)
+- **Deviation from spec:** Next.js 16 renamed `middleware.ts` → `proxy.ts`, and Proxy now defaults to the **Node.js runtime** (confirmed via `node_modules/next/dist/docs`, not the Edge runtime the spec's "no Prisma/bcryptjs in middleware" constraint assumed). So the planned `auth.config.ts` edge-safe split is unnecessary — `proxy.ts` imports the full `auth.ts` directly (`export default auth((req) => {...})`), same as any server component. Simpler, and it's what NextAuth v5's own docs recommend for this pattern.
+- New components: `components/auth/UserMenu.tsx` (Client Component, avatar + dropdown, used in both desktop and mobile nav) — replaces the previously-planned `LogoutButton.tsx`
+- Avatar shows initials derived from `User.name` (e.g. "Kevin Fallas" → "KF")
+- Needs shadcn `dropdown-menu` (and `avatar` if used for the circle) — neither exists in `components/ui/` yet
+- `/admin/*` pages don't exist until Phase 3 — verify the middleware redirect fires via a temporary route or logs, then remove any temporary scaffolding before commit
+- Read `node_modules/next/dist/docs/` for Next.js 16's current middleware API (matcher config, edge runtime constraints) before implementing, per `AGENTS.md`
 
 ## History
 

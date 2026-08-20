@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { auth } from "@/auth";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
 import { AddConsoleDialog } from "@/components/consoles/AddConsoleDialog";
 import { ConsoleCard } from "@/components/consoles/ConsoleCard";
@@ -7,9 +8,6 @@ import {
   type ConsoleFilterType,
 } from "@/components/consoles/ConsoleFilterTabs";
 import { getBrandConsoles } from "@/lib/consoles";
-
-// No auth wired yet — defaults to logged-out, matching Brands page's stub.
-const isLoggedIn = false;
 
 function parseFilterType(raw: string | string[] | undefined): ConsoleFilterType {
   return raw === "home" || raw === "portable" ? raw : "all";
@@ -25,6 +23,7 @@ export default async function BrandConsolesPage({
   const { brandId } = await params;
   const { type } = await searchParams;
   const filter = parseFilterType(type);
+  const isLoggedIn = !!(await auth());
 
   let data;
   try {

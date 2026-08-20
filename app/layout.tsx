@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { auth } from "@/auth";
 import { Navbar } from "@/components/layout/Navbar";
 import "./globals.css";
 
@@ -18,18 +19,21 @@ export const metadata: Metadata = {
   description: "GamesCollection",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
+  const user = session?.user?.name ? { name: session.user.name } : null;
+
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <Navbar />
+        <Navbar user={user} />
         <main className="mx-auto flex w-full max-w-330 flex-1 flex-col px-8 py-8">
           {children}
         </main>

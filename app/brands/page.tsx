@@ -1,12 +1,11 @@
+import { auth } from "@/auth";
 import { BrandCard } from "@/components/brands/BrandCard";
 import { AddBrandDialog } from "@/components/brands/AddBrandDialog";
 import { getBrandsWithConsoleCounts } from "@/lib/brands";
 
-// No auth wired yet — defaults to logged-out, matching Navbar's current stub.
-// Real session check replaces this once auth exists (Phase 3).
-const isLoggedIn = false;
-
 export default async function BrandsPage() {
+  const isLoggedIn = !!(await auth());
+
   let brands;
   try {
     brands = await getBrandsWithConsoleCounts();
