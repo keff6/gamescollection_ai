@@ -2,17 +2,19 @@
 
 ## 1. Goal
 
-`/brands` — entry point into the collection browse flow. Shows every brand as a card;
-clicking one navigates to that brand's consoles.
+`/brands` — entry point into the collection browse flow, and (once logged in) the place
+to add new brands directly in place. Shows every brand as a card; clicking one navigates
+to that brand's consoles.
 
 ## 2. Scope
 
-**In scope:** brand grid, per-card console count, "Add Brand" button (button visible now
-for layout parity with later CRUD, but wired to the real create flow in
-`10-admin-brands-crud.md` — for this spec it can link to `/admin/brands/new` or be a
-no-op placeholder).
+**In scope:** brand grid, per-card console count, "Add Brand" button. The button/modal
+can be built now with a stubbed submit handler; the real create mutation is wired in
+`10-brands-crud.md` once auth exists to gate it — but build the actual UI (modal or
+inline form) here rather than linking to a separate page, since there is no separate
+`/admin` route for brands (see `ROADMAP.md` Phase 3 note).
 
-**Out of scope:** actual create/edit/delete logic (Phase 3).
+**Out of scope:** the create mutation actually persisting (Phase 3), edit/delete (Phase 3).
 
 ## 3. Routes / Pages
 
@@ -32,8 +34,8 @@ Query: all brands with a count of related `Console` rows
 Reference screenshot: `brands-opt1.png`
 
 - Page header: "Pick a brand" (h1) + "7 brands in collection" subtext
-- "+ Add Brand" button, top-right, teal, visible regardless of auth state for layout
-  parity — but see note below on gating
+- "+ Add Brand" button, top-right, teal — opens a modal (same pattern as the Add Game
+  modal in `forms-opt1.png`), not a separate route
 - 2-column card grid (responsive: likely 1 column on mobile)
 - Each card: brand name (bold, larger) + "{N} Console{s}" subtext, whole card clickable,
   subtle hover state, links to `/brands/[brandId]` (consoles page)
@@ -49,9 +51,9 @@ Reference screenshot: `brands-opt1.png`
 - [ ] All seeded brands render with correct console counts
 - [ ] Clicking a card navigates to `/brands/[brandId]`
 - [ ] Layout matches the 2-column card grid in the screenshot
-- [ ] "Add Brand" button is present but only *functional* once the user is logged in
-      (until then, either hide it or route to `/login` — decide and note in code comments;
-      real gating logic lands in Phase 2/3)
+- [ ] "Add Brand" button is **hidden entirely** for logged-out users (per the CRUD
+      placement decision — logged-out visitors see the same pages minus write affordances,
+      not a disabled/redirecting button)
 
 ## 8. Dependencies
 
@@ -59,6 +61,5 @@ Reference screenshot: `brands-opt1.png`
 
 ## 9. Notes / open questions
 
-- Confirm whether "Add Brand" should be hidden entirely for logged-out users on this
-  page, or shown-but-redirects-to-login. Screenshot alone doesn't tell us since it's
-  ambiguous whether that screenshot was taken while logged in.
+- None currently — "Add Brand" visibility is settled (hidden when logged out), consistent
+  with the same decision applied in `05-consoles-page.md` and `06-games-page.md`.

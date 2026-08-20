@@ -3,15 +3,16 @@
 ## 1. Goal
 
 `/brands/[brandId]` — list of consoles belonging to one brand, filterable by console
-type, linking through to each console's games.
+type, linking through to each console's games, and (once logged in) the place to add
+new consoles for that brand.
 
 ## 2. Scope
 
 **In scope:** console grid for a given brand, All/Home/Portable filter tabs, per-card
-game count + "View N Games" link, "Add Console" button (placeholder link, same pattern
-as brands page).
+game count + "View N Games" link, "Add Console" button (opens an inline modal, same
+pattern as brands page — real mutation wired in `11-consoles-crud.md`).
 
-**Out of scope:** create/edit/delete logic (Phase 3).
+**Out of scope:** create/edit/delete logic actually persisting (Phase 3).
 
 ## 3. Routes / Pages
 
@@ -37,7 +38,7 @@ Reference screenshot: `consoles-opt1.png`
 
 - Breadcrumb: `Brands / Consoles` (Brands links back to `/brands`)
 - Page header: brand name as h1 (e.g. "Microsoft") + "{N} consoles" subtext
-- "+ Add Console" button, top-right
+- "+ Add Console" button, top-right, opens inline modal (hidden when logged out)
 - Filter tabs row: `All` (active/teal pill by default), `Home`, `Portable` — filters by
   `isPortable`
 - 2-column card grid, each card:
@@ -61,6 +62,7 @@ Reference screenshot: `consoles-opt1.png`
 - [ ] Filter tabs correctly narrow results by `isPortable` and "All" shows everything
 - [ ] "View N Games" links to `/consoles/[consoleId]` (or equivalent games route)
 - [ ] Invalid `brandId` renders a proper 404, not a crash
+- [ ] "Add Console" hidden entirely for logged-out users
 
 ## 8. Dependencies
 
