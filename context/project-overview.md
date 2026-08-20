@@ -54,8 +54,8 @@ security boundary against the internet at large.
 |---|---|---|
 | Dashboard (`/`) | Stats + charts overview of the collection | No (view only) |
 | Brands (`/brands`) | Card grid of all brands, links to consoles | No (view only) |
-| Consoles (`/brands/[brandId]`) | Consoles for a brand, filterable by type | No (view only) |
-| Games (`/consoles/[consoleId]`) | Games for a console, search/sort, add/edit modal | View: no. Add/edit/delete: yes |
+| Consoles (`/brands/[brandId]/consoles`) | Consoles for a brand, filterable by type | No (view only) |
+| Games (`/consoles/[consoleId]/games`) | Games for a console, search/sort, add/edit modal | View: no. Add/edit/delete: yes |
 | Login (`/login`) | Single-user credential login | N/A |
 | Admin (`/admin/*`) | CRUD for Brands, Consoles, Games, Genres | Yes, all actions |
 | Navbar | Home / Brands / Admin / logged-in-user indicator, present on every page | N/A |

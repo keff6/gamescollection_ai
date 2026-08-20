@@ -29,7 +29,7 @@ export function ConsoleCard({
       </div>
 
       <Button asChild variant="outline" className="w-full text-accent">
-        <Link href={`/consoles/${consoleItem.id}`}>
+        <Link href={`/consoles/${consoleItem.id}/games`}>
           View {consoleItem.gameCount} Game{consoleItem.gameCount === 1 ? "" : "s"}
         </Link>
       </Button>

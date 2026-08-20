@@ -2,7 +2,7 @@
 
 ## 1. Goal
 
-`/consoles/[consoleId]` — list every game tracked for a console, with search and sort,
+`/consoles/[consoleId]/games` — list every game tracked for a console, with search and sort,
 plus the Add/Edit Game form used to create or update entries.
 
 ## 2. Scope
@@ -18,7 +18,7 @@ action once auth exists. Don't block the read-only list on auth.
 
 | Route | Type | Auth required? | Description |
 |---|---|---|---|
-| `/consoles/[consoleId]` | Server Component (list) + Client Component (modal) | No to view, yes to add/edit | Games for one console |
+| `/consoles/[consoleId]/games` | Server Component (list) + Client Component (modal) | No to view, yes to add/edit | Games for one console |
 
 ## 4. Data requirements
 
@@ -26,6 +26,11 @@ Models: `Console` (header), `Game` (filtered by `consoleId`), `Genre` (multi-sel
 options), `GameGenre` (many-to-many join, written on save).
 
 Query for list: `prisma.game.findMany({ where: { consoleId }, include: { genres: { include: { genre: true } } } })`
+
+**Pagination** — games load in batches of 25, oldest-loaded-first (i.e. appended in
+current sort order), with a "Show More" button below the list while more remain. Query
+extends with `take: 25, skip: loadedCount` per batch. Re-fetch and reset to the first
+batch whenever search or sort changes.
 
 **Status fields** — per `00-schema-review.md`, no enum. The form writes directly to:
 - `isWishlist` (owned/wishlist toggle)
@@ -47,10 +52,12 @@ Reference screenshots: `games-opt1.png` (list), `forms-opt1.png` (form layout/fi
 - "+ Add Game" button, top-right, teal, hidden when logged out
 - Search box ("Search games...") — filters by title, client-side or via search param
 - Sort dropdown ("Sort: Title") — other likely options: Year, Rating
-- "Showing results X / Y" counter
+- "Showing results X / Y" counter — X reflects games loaded so far, not just visible
 - Game cards (stacked list, not grid): title (bold) left, rating badge ("7/10") right;
   second row: YEAR / GENRE / DEVELOPER-PUBLISHER as three label+value columns — GENRE
   shows all of a game's genres comma-separated
+- "Show More" button, centered below the list, loads the next batch of 25 games and
+  appends to the current list; hidden once every matching game has been loaded
 
 **Add/Edit Game form** (combining `forms-opt1.png` layout with `game-status.png` detail):
 - Modal title "Add Game" (or "Edit Game"), close (×) top-right
@@ -78,6 +85,7 @@ Reused for editing an existing game — same modal, pre-filled, "Add" button bec
 - [ ] Loading (skeleton list)
 - [ ] Empty (console has zero games — empty state prompting "Add Game")
 - [ ] No search results ("Showing results 0 / N")
+- [ ] Loading next batch (Show More button shows a loading state while fetching)
 - [ ] Form validation errors (required fields, rating out of 1-10 range, year format)
 - [ ] Submit success (modal closes, list refreshes)
 - [ ] Submit failure (inline error, modal stays open)
@@ -88,6 +96,9 @@ Reused for editing an existing game — same modal, pre-filled, "Add" button bec
       seed data titles/years/genres)
 - [ ] Search narrows the list by title and updates the "Showing results" counter
 - [ ] Sort dropdown correctly reorders by the selected field
+- [ ] Games load 25 at a time; "Show More" appends the next 25 and disappears once all
+      matching games are loaded
+- [ ] Changing search or sort resets pagination back to the first batch of 25
 - [ ] Form renders all fields per the combined layout above, required fields enforced
       client-side before submit
 - [ ] Rating input rejects values outside 1-10
@@ -104,4 +115,4 @@ Reused for editing an existing game — same modal, pre-filled, "Add" button bec
 ## 9. Notes / open questions
 
 - Confirm the Owned/Wishlist ↔ `isWishlist` mapping and whether media/playable status
-  should really be hidden for wishlist items, or just optional.
+  should really be hidden for wishlist items, or just optional. Confirmed.

@@ -37,9 +37,9 @@ These are the pages a visitor sees. No login needed to view any of this.
   dashboard screenshot for layout/chart types.
 - [ ] `04-brands-page.md` — `/brands`. Grid/list of brand cards (name, logo/image if
   you have one, count of consoles). Clicking a brand goes to its consoles page.
-- [ ] `05-consoles-page.md` — `/brands/[brandId]` (or `/consoles?brand=`). List of
+- [ ] `05-consoles-page.md` — `/brands/[brandId]/consoles`. List of
   consoles for a given brand. Clicking a console goes to its games page.
-- [ ] `06-games-page.md` — `/consoles/[consoleId]` (or similar). List of games for a
+- [ ] `06-games-page.md` — `/consoles/[consoleId]/games`. List of games for a
   given console — cover art, title, genre, any metadata you're tracking.
 
 **Exit criteria:** you can browse Brand → Consoles → Games end-to-end using seeded data,

@@ -2,7 +2,7 @@
 
 ## 1. Goal
 
-`/brands/[brandId]` — list of consoles belonging to one brand, filterable by console
+`/brands/[brandId]/consoles` — list of consoles belonging to one brand, filterable by console
 type, linking through to each console's games, and (once logged in) the place to add
 new consoles for that brand.
 
@@ -18,7 +18,7 @@ pattern as brands page — real mutation wired in `11-consoles-crud.md`).
 
 | Route | Type | Auth required? | Description |
 |---|---|---|---|
-| `/brands/[brandId]` | Server Component | No | Consoles for one brand |
+| `/brands/[brandId]/consoles` | Server Component | No | Consoles for one brand |
 
 ## 4. Data requirements
 
@@ -60,7 +60,7 @@ Reference screenshot: `consoles.png`
 - [ ] Correct consoles and game counts render for a given brand (verified against
       Microsoft: Xbox/15, Xbox 360/40, Xbox One/25, Xbox Series X/10 from seed data)
 - [ ] Filter tabs correctly narrow results by `isPortable` and "All" shows everything
-- [ ] "View N Games" links to `/consoles/[consoleId]` (or equivalent games route)
+- [ ] "View N Games" links to `/consoles/[consoleId]/games`
 - [ ] Invalid `brandId` renders a proper 404, not a crash
 - [ ] "Add Console" hidden entirely for logged-out users
 
@@ -72,4 +72,4 @@ Reference screenshot: `consoles.png`
 ## 9. Notes / open questions
 
 - Decide the exact games-page route shape now so both this spec and `06-games-page.md`
-  agree: `/consoles/[consoleId]` is assumed throughout these specs — confirm or adjust. Confirmed
+  agree: `/consoles/[consoleId]/games` is assumed throughout these specs — confirm or adjust. Confirmed

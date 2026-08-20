@@ -38,7 +38,7 @@ Reference screenshot: `brands.png`
   modal in `forms.png`), not a separate route
 - 2-column card grid (responsive: likely 1 column on mobile)
 - Each card: brand name (bold, larger) + "{N} Console{s}" subtext, whole card clickable,
-  subtle hover state, links to `/brands/[brandId]` (consoles page)
+  subtle hover state, links to `/brands/[brandId]/consoles` (consoles page)
 
 ## 6. States to handle
 
@@ -49,7 +49,7 @@ Reference screenshot: `brands.png`
 ## 7. Acceptance criteria
 
 - [ ] All seeded brands render with correct console counts
-- [ ] Clicking a card navigates to `/brands/[brandId]`
+- [ ] Clicking a card navigates to `/brands/[brandId]/consoles`
 - [ ] Layout matches the 2-column card grid in the screenshot
 - [ ] "Add Brand" button is **hidden entirely** for logged-out users (per the CRUD
       placement decision — logged-out visitors see the same pages minus write affordances,

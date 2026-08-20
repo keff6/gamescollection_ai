@@ -21,8 +21,8 @@ export function ConsoleFilterTabs({
         const isActive = filter.value === active;
         const href =
           filter.value === "all"
-            ? `/brands/${brandId}`
-            : `/brands/${brandId}?type=${filter.value}`;
+            ? `/brands/${brandId}/consoles`
+            : `/brands/${brandId}/consoles?type=${filter.value}`;
 
         return (
           <Link

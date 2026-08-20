@@ -1,16 +1,39 @@
-# Current Feature
+# Current Feature: Games Page (+ Add/Edit Game Form)
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- What does success look like? -->
+- Build `/consoles/[consoleId]/games` — list every game tracked for a console, with search,
+  sort, and paginated "Show More" loading
+- Game cards (stacked list): title + rating badge, YEAR / GENRE / DEVELOPER-PUBLISHER row
+- "Showing results X / Y" counter reflecting games loaded so far
+- Build the Add/Edit Game modal UI (title, genre multi-select, owned/wishlist toggle,
+  media status radios, playable status checkboxes, year, rating, developer, publisher,
+  notes) — form UI only, no real persistence yet (mutation wired later in
+  `12-games-crud.md`, Phase 3, once auth exists)
+- "+ Add Game" button hidden for logged-out users; read-only list works fully logged-out
+- Handle loading/empty/no-results/loading-next-batch/validation/submit-success/
+  submit-failure states
 
 ## Notes
 
-<!-- Additional context, constraints, or details from spec -->
+- Spec: `context/feature/06-games-page.md`
+- **Pagination**: batches of 25 via `take: 25, skip: loadedCount`, current sort order;
+  "Show More" button appends next batch and hides when exhausted; search/sort changes
+  reset back to the first batch
+- Status fields have no enum yet — form writes directly to the 7 booleans
+  (`isWishlist`, `isComplete`/`isNew`/`isDigital`, `isBacklog`/`isPlaying`/`isFinished`)
+  per `00-schema-review.md`; media status radios are mutually exclusive, playable status
+  checkboxes allow any combination, both shown only when marked Owned
+- Genre is many-to-many (`GameGenre`) — multi-select, not the mock's single `<select>`
+- Rating must be validated 1-10 client-side
+- Modal must be keyboard-accessible (Esc closes, focus trapped)
+- Reused for edit: same modal, pre-filled, "Add" button becomes "Save"
+- Dependencies: `00-schema-review.md` (rating field), `01-seed-data.md`,
+  `02-app-shell-navbar.md`, `05-consoles-page.md` (incoming link from consoles page)
 
 ## History
 
