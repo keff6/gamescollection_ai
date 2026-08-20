@@ -31,11 +31,11 @@ Query: all brands with a count of related `Console` rows
 
 ## 5. UI requirements
 
-Reference screenshot: `brands-opt1.png`
+Reference screenshot: `brands.png`
 
 - Page header: "Pick a brand" (h1) + "7 brands in collection" subtext
 - "+ Add Brand" button, top-right, teal — opens a modal (same pattern as the Add Game
-  modal in `forms-opt1.png`), not a separate route
+  modal in `forms.png`), not a separate route
 - 2-column card grid (responsive: likely 1 column on mobile)
 - Each card: brand name (bold, larger) + "{N} Console{s}" subtext, whole card clickable,
   subtle hover state, links to `/brands/[brandId]` (consoles page)

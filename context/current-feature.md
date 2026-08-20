@@ -1,16 +1,24 @@
-# Current Feature
+# Current Feature: Brands Page
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- What does success look like? -->
+- `/brands` server component renders a 2-column responsive card grid of every `Brand`, each card showing brand name + "{N} Console{s}" count, whole card clickable, links to `/brands/[brandId]`
+- Page header: "Pick a brand" (h1) + "{N} brands in collection" subtext
+- "+ Add Brand" button (top-right, teal) opens a modal (same pattern as Add Game modal in `forms.png`) with a stubbed submit handler — no persistence yet (that's `10-brands-crud.md`)
+- "Add Brand" button hidden entirely for logged-out users (no auth yet, so effectively hidden for now)
+- Handle loading (skeleton cards), empty (prompt to add a brand), and error (DB failure fallback) states
+- Layout matches `brands.png` reference screenshot
 
 ## Notes
 
-<!-- Additional context, constraints, or details from spec -->
+- Data: `prisma.brand.findMany({ include: { _count: { select: { consoles: true } } } })`
+- Out of scope: create mutation actually persisting, edit/delete (all Phase 3 / `10-brands-crud.md`)
+- Depends on: `00-schema-review.md`, `01-seed-data.md`, `02-app-shell-navbar.md` (all already done)
+- Spec file: `context/feature/04-brands-page.md`
 
 ## History
 
