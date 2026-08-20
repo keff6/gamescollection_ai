@@ -1,16 +1,27 @@
-# Current Feature
+# Current Feature: Auth Login
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- What does success look like? -->
+- NextAuth v5 (Auth.js) Credentials provider backed by the existing `User` model (`email` + `password`), JWT session strategy — no Prisma adapter for sessions
+- `/login` page (email + password form) that redirects to `/admin` (or an incoming `callbackUrl`) on success, and redirects away immediately if already logged in
+- Inline error on bad credentials — generic message, never reveals whether the email or password was wrong
+- `scripts/seed-admin.ts` — env-driven (`ADMIN_EMAIL`/`ADMIN_USERNAME`/`ADMIN_PASSWORD`), bcrypt-hashes the password, upserts the single `User` row idempotently, no hardcoded credentials
+- Session persists across a full page reload (cookie-backed JWT)
 
 ## Notes
 
-<!-- Additional context, constraints, or details from spec -->
+- Spec: `context/feature/07-auth-login.md`
+- Out of scope (deferred to `08-auth-middleware.md`): protecting `/admin/*` or any other route, wiring the Navbar/`isLoggedIn` stubs (brands/consoles/games) to the real session
+- No schema/migration changes needed — `User.email`/`password` already exist
+- New deps: `bcryptjs` (not native `bcrypt` — no build step on Vercel), `next-auth@beta` (v5)
+- New env vars: `AUTH_SECRET`, `ADMIN_EMAIL`, `ADMIN_USERNAME`, `ADMIN_PASSWORD` — add to `.env` and document `.env.example`; nothing committed
+- Login identifier is **email** (not username), but `seed-admin.ts` must still set `username` since it's a required unique column
+- Structure `auth.ts` so `08-auth-middleware.md` can later split it into an edge-safe `auth.config.ts` (no Credentials/Prisma) + full `auth.ts`, without a rewrite
+- Reuses theme tokens and Navbar's logo mark on the login card; no reference screenshot provided for this screen
 
 ## History
 

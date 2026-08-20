@@ -9,17 +9,20 @@
     "lint": "eslint",
     "test": "vitest run",
     "migrate:legacy": "tsx scripts/migrate-mysql-legacy.ts",
-    "migrate:legacy:dry": "tsx scripts/migrate-mysql-legacy.ts --dry-run"
+    "migrate:legacy:dry": "tsx scripts/migrate-mysql-legacy.ts --dry-run",
+    "seed:admin": "tsx scripts/seed-admin.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
+    "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^17.4.2",
     "lucide-react": "^1.33.0",
     "mysql2": "^3.22.5",
     "next": "16.2.9",
+    "next-auth": "^5.0.0-beta.32",
     "pg": "^8.22.0",
     "radix-ui": "^1.6.7",
     "react": "19.2.4",

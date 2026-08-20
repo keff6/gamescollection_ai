@@ -23,7 +23,7 @@ const NAV_LINKS: NavLink[] = [
   },
 ];
 
-function GamepadIcon({ className }: { className?: string }) {
+export function GamepadIcon({ className }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 24 24"
