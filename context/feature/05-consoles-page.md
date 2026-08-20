@@ -34,7 +34,7 @@ with how the games-page search/sort is implemented (see `06-games-page.md`).
 
 ## 5. UI requirements
 
-Reference screenshot: `consoles-opt1.png`
+Reference screenshot: `consoles.png`
 
 - Breadcrumb: `Brands / Consoles` (Brands links back to `/brands`)
 - Page header: brand name as h1 (e.g. "Microsoft") + "{N} consoles" subtext
@@ -72,4 +72,4 @@ Reference screenshot: `consoles-opt1.png`
 ## 9. Notes / open questions
 
 - Decide the exact games-page route shape now so both this spec and `06-games-page.md`
-  agree: `/consoles/[consoleId]` is assumed throughout these specs — confirm or adjust.
+  agree: `/consoles/[consoleId]` is assumed throughout these specs — confirm or adjust. Confirmed
