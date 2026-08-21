@@ -1,9 +1,16 @@
 "use client";
 
+import { ChevronDownIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { UserMenu } from "@/components/auth/UserMenu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface NavLink {
   href: string;
@@ -101,6 +108,38 @@ function XIcon({ className }: { className?: string }) {
   );
 }
 
+function AdminDropdown({
+  pathname,
+  onNavigate,
+}: {
+  pathname: string;
+  onNavigate?: () => void;
+}) {
+  const active = pathname.startsWith("/admin");
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        className={`flex items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+          active
+            ? "bg-accent/10 text-accent"
+            : "text-muted-foreground hover:text-foreground"
+        }`}
+      >
+        Admin
+        <ChevronDownIcon className="h-4 w-4" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start">
+        <DropdownMenuItem asChild>
+          <Link href="/admin/genres" onClick={onNavigate}>
+            Genre
+          </Link>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
 function AuthAction({
   user,
   onNavigate,
@@ -169,6 +208,11 @@ export function Navbar({ user = null }: { user?: NavbarUser | null }) {
                 </li>
               );
             })}
+            {user && (
+              <li>
+                <AdminDropdown pathname={pathname} />
+              </li>
+            )}
           </ul>
         </div>
 
@@ -212,6 +256,14 @@ export function Navbar({ user = null }: { user?: NavbarUser | null }) {
                 </li>
               );
             })}
+            {user && (
+              <li>
+                <AdminDropdown
+                  pathname={pathname}
+                  onNavigate={() => setIsMenuOpen(false)}
+                />
+              </li>
+            )}
           </ul>
           <div className="mt-4 border-t border-border px-3 pt-4">
             <AuthAction
