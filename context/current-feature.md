@@ -1,16 +1,34 @@
-# Current Feature
+# Current Feature: Brands CRUD
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- What does success look like? -->
+- Logged-in users can add a brand via the existing "+ Add Brand" button (now persists instead of no-op)
+- Logged-in users can edit a brand's name/origin from its card
+- Logged-in users can delete a brand from its card, gated behind a confirmation modal that names the cascade to its consoles/games
+- Deleting a brand removes its consoles and games (DB cascade already enforced; UI path exercises it)
+- Logged-out users see no edit/delete controls anywhere on `/brands`
+- Server Actions re-verify `auth()` independently of the page-level session check
+- Changes are visible immediately on `/brands` without a manual refresh (revalidation/router refresh after each mutation)
+- `npm run build`, `npm run lint`, and `npm test` pass
 
 ## Notes
 
-<!-- Additional context, constraints, or details from spec -->
+- Source spec: `context/feature/10-brands-crud.md`
+- Rename `AddBrandDialog` → generic `BrandFormDialog` accepting optional `brand` prop (mirrors `GameFormDialog`'s `game?:` pattern); pre-fills Name/Origin, swaps title/submit label to "Edit Brand"/"Save"
+- `BrandCard` is currently a single `<Link>` wrapping the whole card — restructure so edit/delete icon buttons (top-right, visible only when logged in) don't trigger navigation
+- Delete confirmation via `alert-dialog`, explicitly warns using live `consoleCount`: "Delete '<name>'? This also deletes its N console(s) and all of their games. This can't be undone."
+- **Resolved:** cascade deletes are blocked. `deleteBrand` must reject (and the UI must prevent) deleting a brand that has 1+ consoles — user must delete/move its consoles first. This overrides §6/§7's cascade-delete language and the "Delete removes its consoles and games" acceptance criterion; the delete confirmation copy should reflect blocking, not cascading, and the `alert-dialog` should surface a clear error when `consoleCount > 0` instead of offering to proceed
+- Field limits: `name` max 30 chars, `origin`/`country` max 30 chars
+- `lib/brands.ts`: add `createBrand`, `updateBrand`, `deleteBrand`
+- `app/brands/actions.ts`: `createBrandAction`, `updateBrandAction`, `deleteBrandAction`, each independently re-checking `auth()`
+- Reuses zod + sonner + alert-dialog pattern established in `09-admin-genres.md`
+- Decide at implementation time: shared `components/shared/ConfirmDeleteDialog.tsx` vs. per-entity dialog — likely shared since `11-consoles-crud.md`/`12-games-crud.md` need the same pattern
+- Out of scope: Console/Game CRUD (specs 11/12), `logoUrl` upload/edit flow, undo/soft-delete
+- Depends on: `04-brands-page.md`, `08-auth-middleware.md`, `09-admin-genres.md` (implement after 09)
 
 ## History
 
