@@ -13,7 +13,7 @@ export default async function LoginPage({
   const { callbackUrl } = await searchParams;
 
   if (session) {
-    redirect(typeof callbackUrl === "string" ? callbackUrl : "/admin");
+    redirect(typeof callbackUrl === "string" ? callbackUrl : "/");
   }
 
   return (

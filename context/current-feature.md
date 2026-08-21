@@ -1,16 +1,30 @@
-# Current Feature
+# Current Feature: Admin Genres CRUD
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- What does success look like? -->
+- Add `/admin/genres` — inline-editable table (single "Name" column) for full genre CRUD (add/edit/delete)
+- Add Navbar "Admin" dropdown (visible only when logged in), one item "Genre" → `/admin/genres`
+- Extend `lib/genres.ts` with `createGenre`, `updateGenre`, `deleteGenre` (zod-validated), alongside the existing `getAllGenres`
+- Add Server Actions (`app/admin/genres/actions.ts`) wrapping those, each independently re-checking `auth()` server-side
+- Case-insensitive duplicate-name guard on create/update, surfaced as an inline field error (client + server)
+- Delete requires confirmation via new shadcn `alert-dialog` primitive before it fires
+- Introduce `zod` and `sonner` (toast) as new deps — first use in the repo; mount `<Toaster />` in `app/layout.tsx`; every later CRUD spec (10, 11, 12) builds on this same validation/toast pattern
+- `npm run build`, `npm run lint`, `npm test` pass
 
 ## Notes
 
-<!-- Additional context, constraints, or details from spec -->
+- No schema changes — `Genre` model already exists; `GameGenre.genre` already has `onDelete: Cascade`, so deleting a genre only removes its `GameGenre` join rows, not the games themselves
+- No `@unique` constraint on `Genre.name` at the DB level — uniqueness enforced at the app layer only (case-insensitive check before create/update)
+- Inline-edit UX: click into name → edit → blur/Enter saves, Esc reverts; "+ Add Genre" inserts a focused blank row at the top, Esc/blur-while-empty discards without a server call
+- No reference screenshot for this page — match the established dark theme (`bg-card`, `ring-foreground/10`, teal accent) and the header layout pattern from `/brands` etc. ("Genres" title + count left, "+ Add Genre" button right)
+- Confirm `sonner`'s toast styling reads correctly against the dark theme before calling this done (same class of check that caught the shadcn-init regression during the dashboard phase)
+- Out of scope: any other `/admin/*` page, bulk operations, editing genre-game assignments from this page, merge/reassign-on-rename
+- Depends on: `08-auth-middleware.md` (`/admin/:path*` protection, `auth()` helper), `06-games-page.md` (existing `getAllGenres`/`GenreOption` type used by `GameFormDialog`)
+- Component breakdown: `app/admin/genres/page.tsx` (server, calls `getAllGenres`, renders `GenresTable`), `app/admin/genres/actions.ts`, `components/admin/GenresTable.tsx` (client), `components/ui/alert-dialog.tsx` (new shadcn primitive), `components/layout/Navbar.tsx` (Admin dropdown, gated on `user` non-null, desktop + mobile)
 
 ## History
 

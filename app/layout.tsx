@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Toaster } from "sonner";
 import { auth } from "@/auth";
 import { Navbar } from "@/components/layout/Navbar";
 import "./globals.css";
@@ -37,6 +38,7 @@ export default async function RootLayout({
         <main className="mx-auto flex w-full max-w-330 flex-1 flex-col px-8 py-8">
           {children}
         </main>
+        <Toaster theme="dark" richColors />
       </body>
     </html>
   );
