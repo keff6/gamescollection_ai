@@ -2,7 +2,7 @@
 
 **Status:** Draft
 **Owner:** (you)
-**Last updated:** 2026-08-19
+**Last updated:** 2026-08-21
 
 ---
 
@@ -53,12 +53,12 @@ security boundary against the internet at large.
 | Area | Description | Auth required |
 |---|---|---|
 | Dashboard (`/`) | Stats + charts overview of the collection | No (view only) |
-| Brands (`/brands`) | Card grid of all brands, links to consoles | No (view only) |
-| Consoles (`/brands/[brandId]/consoles`) | Consoles for a brand, filterable by type | No (view only) |
-| Games (`/consoles/[consoleId]/games`) | Games for a console, search/sort, add/edit modal | View: no. Add/edit/delete: yes |
+| Brands (`/brands`) | Card grid of all brands, links to consoles; add/edit/delete a brand in place | View: no. Add/edit/delete: yes |
+| Consoles (`/brands/[brandId]/consoles`) | Consoles for a brand, filterable by type; add/edit/delete a console in place | View: no. Add/edit/delete: yes |
+| Games (`/consoles/[consoleId]/games`) | Games for a console, search/sort, add/edit/delete modal | View: no. Add/edit/delete: yes |
 | Login (`/login`) | Single-user credential login | N/A |
-| Admin (`/admin/*`) | CRUD for Brands, Consoles, Games, Genres | Yes, all actions |
-| Navbar | Home / Brands / Admin / logged-in-user indicator, present on every page | N/A |
+| Admin (`/admin/genres`) | Genre CRUD only — reached via a "Genre" item under the Navbar's Admin dropdown | Yes, all actions |
+| Navbar | Home / Brands / Admin (dropdown → Genre) / logged-in-user indicator, present on every page | N/A |
 
 ## 7. User stories
 
@@ -70,8 +70,9 @@ security boundary against the internet at large.
   a specific title quickly as the list grows.
 - As the collection owner, I can log in and add/edit/delete a game (with status, rating,
   genre, developer/publisher, notes) so my catalog stays accurate over time.
-- As the collection owner, I can manage brands, consoles, and genres from an admin area
-  so I'm not limited to whatever was in the seed data.
+- As the collection owner, I can add/edit/delete brands and consoles directly from their
+  browse pages, and manage genres from a small admin table, so I'm not limited to
+  whatever was in the seed data.
 - As the collection owner, if I'm not logged in, I can still browse everything — I just
   can't change anything.
 
@@ -94,16 +95,30 @@ security boundary against the internet at large.
 - Session persists across page reloads until logout
 - Logged-out users attempting a write action are redirected to `/login`
 
-### 8.4 Admin CRUD
-- Full create/read/update/delete for Brand, Console, Game, Genre
+### 8.4 CRUD
+- Full create/read/update/delete for Brand, Console, Game, Genre — but CRUD lives in two
+  different places depending on the entity:
+  - **Brand, Console, Game** — CRUD happens in place on their existing browse pages
+    (`/brands`, `/brands/[brandId]/consoles`, `/consoles/[consoleId]/games`), not under
+    `/admin`. Each page gets an "Add" button (already stubbed) plus, for logged-in users,
+    an edit action per card and a "Delete" action per card with a confirmation modal
+    before it fires.
+  - **Genre** — the only entity with a real admin page, at `/admin/genres`, since it's a
+    single-field (`name`) entity best managed as a simple editable table rather than a
+    modal-per-row: existing genres are edited inline in the table, "Add" appends a new
+    inline row to fill in, and each row gets a "Delete" action with a confirmation modal.
 - Game create/edit reuses the Add Game modal (title, genre(s), status, year, rating,
   developer, publisher, notes)
 - Deleting a Brand cascades to its Consoles and their Games (already enforced at the DB
   level via `onDelete: Cascade`) — UI must confirm this destructive action before it fires
+- All Add/Edit/Delete controls (on the browse pages and on `/admin/genres`) are visible
+  only to logged-in users; deletes always require a confirmation modal before they fire
 
 ### 8.5 Navbar
-- Present on every route: logo/wordmark, Home/Brands/Dashboard links (Admin link shown
-  once logged in), login state indicator, Log In/Log Out action
+- Present on every route: logo/wordmark, Home/Brands/Dashboard links, login state
+  indicator, Log In/Log Out action
+- Admin link is a dropdown, visible once logged in; today it has a single item, "Genre",
+  linking to `/admin/genres`
 
 ## 9. Data model (summary)
 
@@ -134,7 +149,8 @@ screenshots and feature list, not growth/engagement metrics:
 
 - All five reference screens (dashboard, brands, consoles, games, add-game form) are
   implemented and visually match the provided designs
-- Full CRUD works for all four entities from the admin area
+- Full CRUD works for all four entities: Brand/Console/Game in place on their browse
+  pages, Genre via `/admin/genres`
 - Login gates write actions correctly; browsing works fully logged-out
 - The owner actually uses it to replace their existing tracking method
 
@@ -142,12 +158,13 @@ screenshots and feature list, not growth/engagement metrics:
 
 Carried over from spec review — resolve before or during implementation:
 
-1. Keep `Game`'s 7 status booleans, or migrate to a single `status` enum? (recommended:
-   migrate — see `specs/00-schema-review.md`)
+1. ~~Keep `Game`'s 7 status booleans, or migrate to a single `status` enum?~~ Resolved —
+   migrated, see `specs/00-schema-review.md`.
 2. Genre field on the Add Game form: single-select or multi-select? (game cards display
    multiple genres, so schema supports many-to-many already)
-3. Are "Add Brand/Console/Game" buttons hidden for logged-out users, or shown but
-   redirect to login?
+3. ~~Are "Add Brand/Console/Game" buttons hidden for logged-out users, or shown but
+   redirect to login?~~ Resolved — hidden for logged-out users, matching the existing
+   `isLoggedIn`-gated stub already in place on the brands/consoles/games pages.
 4. What does the "4 / 23" Brands/Consoles dashboard stat actually mean (brands *with
    games* vs. total brands)?
 5. What is the `saga` field for, and does it need UI in v1 or a later phase?
@@ -160,7 +177,8 @@ See `ROADMAP.md` for the full phased task breakdown. Summary:
 1. **Foundation** — schema fixes, seed data, app shell/navbar
 2. **Public browsing** — dashboard, brands, consoles, games pages
 3. **Auth** — login + route protection
-4. **Admin CRUD** — Brands, Genres, Consoles, Games
+4. **CRUD** — Brand/Console/Game CRUD in place on their browse pages, Genre CRUD via
+   `/admin/genres`
 5. **Polish** — empty/loading/error states, responsive pass, validation
 
 ## 14. References
@@ -168,6 +186,7 @@ See `ROADMAP.md` for the full phased task breakdown. Summary:
 - `CLAUDE.md` — repo conventions and stack
 - `schema.prisma` — current data model
 - `ROADMAP.md` — phased task breakdown
+- `SPEC_TEMPLATE.md` — phased task breakdown
 - `specs/*.md` — per-feature implementation specs
-- Screenshots: `dashboard-opt1.png`, `brands-opt1.png`, `consoles-opt1.png`,
-  `games-opt1.png`, `forms-opt1.png`
+- Screenshots: `dashboard.png`, `brands.png`, `consoles.png`,
+  `games.png`, `forms.png`

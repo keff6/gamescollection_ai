@@ -33,6 +33,7 @@ Execute the requested action: $ARGUMENTS
 | `review` | Check goals met, code quality |
 | `explain` | Document what changed and why |
 | `complete` | Commit, push, merge, reset |
+| `generate` | Generates specs |
 
 See [actions/](actions/) for detailed instructions.
 

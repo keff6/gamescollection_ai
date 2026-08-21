@@ -62,19 +62,33 @@ to `/login` if they hit `/admin`; logged-in state persists across refresh.
 
 ---
 
-## Phase 3 — Admin CRUD
+## Phase 3 — CRUD
 
-One spec per entity, each covering list/create/edit/delete for that entity.
+CRUD is split across two places: Brand/Console/Game are managed in place on their
+existing browse pages (no separate admin page for them), while Genre — a single-field
+entity — gets a small dedicated admin page since an inline editable table is a better
+fit for it than a modal per row.
 
-- [ ] `09-admin-shell.md` — `/admin` layout, sidebar or tabs for Brands/Consoles/Games/Genres.
-- [ ] `10-admin-brands-crud.md`
-- [ ] `11-admin-genres-crud.md` — do this before consoles/games since both depend on it
-  existing for dropdowns.
-- [ ] `12-admin-consoles-crud.md` — depends on Brands existing (dropdown to assign brand).
-- [ ] `13-admin-games-crud.md` — depends on Consoles + Genres existing (dropdowns).
+- [ ] `09-admin-genres.md` — Navbar's Admin link becomes a dropdown (visible once
+  logged in); its one item, "Genre", links to `/admin/genres`. That page is an editable
+  table: existing genres edit inline, "Add" appends a new inline row, each row has a
+  "Delete" action with a confirmation modal. Do this before Games since the game form's
+  genre multi-select depends on real genres existing.
+- [ ] `10-brands-crud.md` — wire real create/edit/delete into the `/brands` page: the
+  existing `AddBrandDialog` stub gets a real submit handler, add an edit entry point per
+  card, add a per-card "Delete" action with a confirmation modal (deleting a Brand
+  cascades to its Consoles/Games — the modal must say so).
+- [ ] `11-consoles-crud.md` — same pattern as Brands, on
+  `/brands/[brandId]/consoles`; depends on Brands existing (console create needs a
+  brand to attach to, which this page already has via the route param).
+- [ ] `12-games-crud.md` — wire real create/edit/delete into
+  `/consoles/[consoleId]/games`: the existing `GameFormDialog` stub gets a real
+  submit handler for add/edit, add a per-card "Delete" action with a confirmation
+  modal; depends on Consoles (route param) and Genres (dropdown) existing.
 
-**Exit criteria:** a logged-in user can fully manage all four entities; changes show up
-immediately on the Phase 1 public pages.
+**Exit criteria:** a logged-in user can fully manage all four entities — Brand/Console/
+Game from their own browse pages, Genre from `/admin/genres` — with every delete gated
+behind a confirmation modal; changes show up immediately on the Phase 1 public pages.
 
 ---
 
@@ -93,8 +107,11 @@ immediately on the Phase 1 public pages.
   real UI needs before locking in CRUD forms around it.
 - Auth sits right before CRUD because it has no reason to exist until there's something
   to protect — building it earlier just adds friction to Phase 1 iteration.
-- Genres before Consoles/Games in Phase 3 avoids building a dropdown against an entity
-  that doesn't have CRUD yet.
+- Genres before Games in Phase 3 avoids building the game form's genre dropdown against
+  an entity that doesn't have CRUD yet. Brand/Console/Game CRUD lives on their own
+  browse pages rather than under `/admin` — only Genre gets a dedicated admin page,
+  since it's simple enough for an editable table and doesn't have a browse page of
+  its own to host CRUD on.
 
 ## Decisions locked in from schema + screenshot review
 
@@ -109,8 +126,11 @@ immediately on the Phase 1 public pages.
 ## Still open (small decisions, called out in individual specs)
 
 - Genre field: single-select vs. multi-select in the Add Game modal (`06-games-page.md`)
-- Whether "Add Brand/Console/Game" buttons are hidden or shown-but-gated for logged-out
-  users (`04-brands-page.md`, `06-games-page.md`)
 - Exact meaning of the "4 / 23" Brands/Consoles dashboard stat (`03-dashboard.md`)
 - Full view of the "Collection Status" dashboard section, currently cropped in the
   screenshot (`03-dashboard.md`)
+
+Resolved since first draft: "Add Brand/Console/Game" buttons are hidden (not
+shown-but-gated) for logged-out users; Phase 3 CRUD is split between the entities'
+own browse pages (Brand/Console/Game) and a dedicated `/admin/genres` editable-table
+page (Genre only) — see `context/project-overview.md` §8.4/§8.5.
