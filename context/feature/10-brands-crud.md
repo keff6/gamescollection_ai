@@ -27,6 +27,10 @@ manage brands, replacing the no-op stub left behind by `04-brands-page.md`'s
 - `lib/brands.ts`: extend with `createBrand`, `updateBrand`, `deleteBrand`.
 - Server Actions (`app/brands/actions.ts`) wrapping those three, each re-checking
   `auth()` server-side.
+- Cascade deletes are not permitted. You can't delete a Brad that has 1 or more Consoles
+- | field name | max chars |
+  | name | 30 |
+  | country | 30 |
 
 **Out of scope (explicitly not doing this now):**
 - Console or Game CRUD — those are `11-consoles-crud.md` and `12-games-crud.md`.

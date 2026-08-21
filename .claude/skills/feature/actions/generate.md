@@ -1,6 +1,6 @@
 # Generate Action
 
-1. Check $ARGUMENTS (after "geerate"):
+1. Check $ARGUMENTS (after "generate"):
    - If it has text, look for that text as a Phase or section in the  `context/ROADMAP.md`
    - If is blank, ask the user what part of the ROADMAP wannts to generate.
    - If not specified, don't generate anything
