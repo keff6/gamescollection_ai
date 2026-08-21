@@ -1,34 +1,22 @@
-# Current Feature: Admin Genres CRUD
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Add `/admin/genres` — inline-editable table (single "Name" column) for full genre CRUD (add/edit/delete)
-- Add Navbar "Admin" dropdown (visible only when logged in), one item "Genre" → `/admin/genres`
-- Extend `lib/genres.ts` with `createGenre`, `updateGenre`, `deleteGenre` (zod-validated), alongside the existing `getAllGenres`
-- Add Server Actions (`app/admin/genres/actions.ts`) wrapping those, each independently re-checking `auth()` server-side
-- Case-insensitive duplicate-name guard on create/update, surfaced as an inline field error (client + server)
-- Delete requires confirmation via new shadcn `alert-dialog` primitive before it fires
-- Introduce `zod` and `sonner` (toast) as new deps — first use in the repo; mount `<Toaster />` in `app/layout.tsx`; every later CRUD spec (10, 11, 12) builds on this same validation/toast pattern
-- `npm run build`, `npm run lint`, `npm test` pass
+<!-- What does success look like? -->
 
 ## Notes
 
-- No schema changes — `Genre` model already exists; `GameGenre.genre` already has `onDelete: Cascade`, so deleting a genre only removes its `GameGenre` join rows, not the games themselves
-- No `@unique` constraint on `Genre.name` at the DB level — uniqueness enforced at the app layer only (case-insensitive check before create/update)
-- Inline-edit UX: click into name → edit → blur/Enter saves, Esc reverts; "+ Add Genre" inserts a focused blank row at the top, Esc/blur-while-empty discards without a server call
-- No reference screenshot for this page — match the established dark theme (`bg-card`, `ring-foreground/10`, teal accent) and the header layout pattern from `/brands` etc. ("Genres" title + count left, "+ Add Genre" button right)
-- Confirm `sonner`'s toast styling reads correctly against the dark theme before calling this done (same class of check that caught the shadcn-init regression during the dashboard phase)
-- Out of scope: any other `/admin/*` page, bulk operations, editing genre-game assignments from this page, merge/reassign-on-rename
-- Depends on: `08-auth-middleware.md` (`/admin/:path*` protection, `auth()` helper), `06-games-page.md` (existing `getAllGenres`/`GenreOption` type used by `GameFormDialog`)
-- Component breakdown: `app/admin/genres/page.tsx` (server, calls `getAllGenres`, renders `GenresTable`), `app/admin/genres/actions.ts`, `components/admin/GenresTable.tsx` (client), `components/ui/alert-dialog.tsx` (new shadcn primitive), `components/layout/Navbar.tsx` (Admin dropdown, gated on `user` non-null, desktop + mobile)
+<!-- Additional context, constraints, or details from spec -->
 
 ## History
 
 <!-- Keep this updated. Earliest to Latest -->
+
+- **2026-08-21** — Admin Genres CRUD: built `/admin/genres` as an inline-editable genre table (single "Name" column) — click into a name to edit, blur/Enter saves, Esc reverts; "+ Add Genre" inserts a focused blank row, Esc/blur-while-empty discards without a server call. Added a Navbar "Admin" dropdown (visible only when logged in, both desktop and mobile) with one item, "Genre" → `/admin/genres`, reusing the existing `dropdown-menu` primitive. Extended `lib/genres.ts` with `createGenre`/`updateGenre`/`deleteGenre` alongside the existing `getAllGenres`, each backed by a case-insensitive duplicate-name guard (client-side instant check plus a server-side re-check as the source of truth) and zod validation (1-50 chars, trimmed). Added `app/admin/genres/actions.ts` Server Actions wrapping those, each independently re-checking `auth()` regardless of what the page renders. Delete requires confirmation via a new shadcn `alert-dialog` primitive (first use in the repo — `dialog` is reserved for content dialogs like Add Brand/Console/Game). Introduced `zod` and `sonner` as first-time deps for this repo; mounted `<Toaster theme="dark" richColors />` once in `app/layout.tsx` — the pattern later CRUD specs (10, 11, 12) are expected to reuse. Mid-implementation (triggered by `/feature test`), split the pure genre logic — `genreNameSchema`, `sortGenresByName`, `isDuplicateGenreName`, `toGenreErrorMessage` — out of `lib/genres.ts` into a new `lib/genre-utils.ts` with no `db`/Prisma import: the client component (`GenresTable.tsx`) had been importing these straight from `lib/genres.ts`, which pulled the server-only Postgres driver into the client bundle and broke `npm run build` with a Turbopack "chunking context does not support external modules (node:module)" error. Added `lib/genre-utils.test.ts` (16 tests) covering that extracted logic. Also fixed two issues found during manual review: the post-login redirect (`app/login/page.tsx`, `components/auth/LoginForm.tsx`) defaulted to the nonexistent `/admin` instead of `/`, and the genre-name input had no client-side `maxLength` to match the existing 50-char server-side validation. Verified end-to-end against the real dev DB via Playwright click-throughs (logged-out redirect to `/login` with the Admin dropdown hidden, Admin dropdown → Genre navigation once logged in, add/duplicate-rejection/inline-edit/Esc-revert/delete-with-confirmation, toasts, blur-discard on an empty new row) plus `npm run lint`, `npx tsc --noEmit`, `npm run build`, and `npm test` (53/53 passing, up from 37).
 
 - **2026-07-03** — Set up Prisma 7 ORM with Neon PostgreSQL as the database layer: `schema.prisma` with `Brand`, `Console`, `Genre`, `Game`, `GameGenre`, `User` models plus NextAuth v5 `Account`/`Session`/`VerificationToken`; indexes and cascade deletes added; initial migration (`20260703170030_init`) created and verified against the Neon development branch.
 - **2026-07-03** — Migrated legacy data from the MySQL database (Railway) into Neon PostgreSQL via `scripts/migrate-mysql-legacy.ts`: connected live to the `gamescollection` MySQL schema, carried over original UUID primary keys as-is (legacy IDs were already varchar(36) UUIDs), applied boolean/JSON/empty-string coercions, and fell back to console `name` for the ~20 rows with a missing `short_name`. Imported 7 brands, 27 consoles, 24 genres, 1504 games, and 2422 game-genre links; row counts and spot-checked relations verified. `User`/`Account`/`Session`/`VerificationToken` were left untouched.
