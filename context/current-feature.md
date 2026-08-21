@@ -1,38 +1,22 @@
-# Current Feature: Brands CRUD
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Logged-in users can add a brand via the existing "+ Add Brand" button (now persists instead of no-op)
-- Logged-in users can edit a brand's name/origin from its card
-- Logged-in users can delete a brand from its card, gated behind a confirmation modal that names the cascade to its consoles/games
-- Deleting a brand removes its consoles and games (DB cascade already enforced; UI path exercises it)
-- Logged-out users see no edit/delete controls anywhere on `/brands`
-- Server Actions re-verify `auth()` independently of the page-level session check
-- Changes are visible immediately on `/brands` without a manual refresh (revalidation/router refresh after each mutation)
-- `npm run build`, `npm run lint`, and `npm test` pass
+<!-- What does success look like? -->
 
 ## Notes
 
-- Source spec: `context/feature/10-brands-crud.md`
-- Rename `AddBrandDialog` → generic `BrandFormDialog` accepting optional `brand` prop (mirrors `GameFormDialog`'s `game?:` pattern); pre-fills Name/Origin, swaps title/submit label to "Edit Brand"/"Save"
-- `BrandCard` is currently a single `<Link>` wrapping the whole card — restructure so edit/delete icon buttons (top-right, visible only when logged in) don't trigger navigation
-- Delete confirmation via `alert-dialog`, explicitly warns using live `consoleCount`: "Delete '<name>'? This also deletes its N console(s) and all of their games. This can't be undone."
-- **Resolved:** cascade deletes are blocked. `deleteBrand` must reject (and the UI must prevent) deleting a brand that has 1+ consoles — user must delete/move its consoles first. This overrides §6/§7's cascade-delete language and the "Delete removes its consoles and games" acceptance criterion; the delete confirmation copy should reflect blocking, not cascading, and the `alert-dialog` should surface a clear error when `consoleCount > 0` instead of offering to proceed
-- Field limits: `name` max 30 chars, `origin`/`country` max 30 chars
-- `lib/brands.ts`: add `createBrand`, `updateBrand`, `deleteBrand`
-- `app/brands/actions.ts`: `createBrandAction`, `updateBrandAction`, `deleteBrandAction`, each independently re-checking `auth()`
-- Reuses zod + sonner + alert-dialog pattern established in `09-admin-genres.md`
-- Decide at implementation time: shared `components/shared/ConfirmDeleteDialog.tsx` vs. per-entity dialog — likely shared since `11-consoles-crud.md`/`12-games-crud.md` need the same pattern
-- Out of scope: Console/Game CRUD (specs 11/12), `logoUrl` upload/edit flow, undo/soft-delete
-- Depends on: `04-brands-page.md`, `08-auth-middleware.md`, `09-admin-genres.md` (implement after 09)
+<!-- Additional context, constraints, or details from spec -->
 
 ## History
 
 <!-- Keep this updated. Earliest to Latest -->
+
+- **2026-08-21** — Brands CRUD: wired real create/edit/delete into `/brands`, replacing the `AddBrandDialog` no-op stub. Renamed/generalized it to `components/brands/BrandFormDialog.tsx` accepting an optional `brand` prop (mirrors `GameFormDialog`'s `game?:` pattern), handling both Add and Edit. Restructured `BrandCard.tsx` from a single card-wide `<Link>` into an outer `<div>` with an inner `<Link>` around the name/count plus sibling edit/delete icon buttons (top-right, visible only when logged in) — since the icons are siblings rather than descendants of the `Link`, no `preventDefault`/`stopPropagation` was needed. Added `components/brands/BrandsGrid.tsx`, a client component that owns the brand list as local state (mirroring `GenresTable.tsx`'s pattern) so add/edit/delete update the grid immediately without a router refresh; `app/brands/page.tsx` now just fetches data and hands off to it. Extended `lib/brands.ts` with `createBrand`/`updateBrand`/`deleteBrand`, and split pure logic (`brandNameSchema` ≤30 chars, `brandOriginSchema` ≤30 chars optional, `sortBrandsByName`, `toBrandErrorMessage`) into `lib/brand-utils.ts` with no Prisma import, following the exact precedent set by `lib/genre-utils.ts` in the prior genres feature (same Turbopack client-bundle concern). Added `app/brands/actions.ts` (`createBrandAction`/`updateBrandAction`/`deleteBrandAction`), each independently re-checking `auth()`. **Resolved an internal contradiction in the spec before implementing:** cascade deletes are blocked rather than allowed — `deleteBrand` rejects deletion when a brand still has 1+ consoles, and the delete confirmation `alert-dialog` shows a "Can't delete "X" — it still has N console(s)" message with only a Close action (no destructive button) in that case, falling back to a normal Cancel/Delete confirmation when `consoleCount` is 0. Added `lib/brand-utils.test.ts` (20 tests) covering the extracted pure logic; `lib/brands.ts`'s Prisma-backed CRUD functions and `app/brands/actions.ts`'s Server Actions were intentionally left untested, matching the same "skip thin DB passthroughs" precedent as `lib/genres.ts`/`app/admin/genres/actions.ts`. Verified against the real dev DB via a Playwright driver script (`chromium-cli` wasn't available in this environment, so used `playwright` directly instead) covering login, add, edit, blocked-delete (brand with consoles), successful delete (brand with none, DB restored to its original 7-brand state afterward), and confirmed zero edit/delete controls render for a logged-out session — plus `npm run lint`, `npx tsc --noEmit`, `npm run build`, and `npm test` (71/71 passing, up from 53).
 
 - **2026-08-21** — Admin Genres CRUD: built `/admin/genres` as an inline-editable genre table (single "Name" column) — click into a name to edit, blur/Enter saves, Esc reverts; "+ Add Genre" inserts a focused blank row, Esc/blur-while-empty discards without a server call. Added a Navbar "Admin" dropdown (visible only when logged in, both desktop and mobile) with one item, "Genre" → `/admin/genres`, reusing the existing `dropdown-menu` primitive. Extended `lib/genres.ts` with `createGenre`/`updateGenre`/`deleteGenre` alongside the existing `getAllGenres`, each backed by a case-insensitive duplicate-name guard (client-side instant check plus a server-side re-check as the source of truth) and zod validation (1-50 chars, trimmed). Added `app/admin/genres/actions.ts` Server Actions wrapping those, each independently re-checking `auth()` regardless of what the page renders. Delete requires confirmation via a new shadcn `alert-dialog` primitive (first use in the repo — `dialog` is reserved for content dialogs like Add Brand/Console/Game). Introduced `zod` and `sonner` as first-time deps for this repo; mounted `<Toaster theme="dark" richColors />` once in `app/layout.tsx` — the pattern later CRUD specs (10, 11, 12) are expected to reuse. Mid-implementation (triggered by `/feature test`), split the pure genre logic — `genreNameSchema`, `sortGenresByName`, `isDuplicateGenreName`, `toGenreErrorMessage` — out of `lib/genres.ts` into a new `lib/genre-utils.ts` with no `db`/Prisma import: the client component (`GenresTable.tsx`) had been importing these straight from `lib/genres.ts`, which pulled the server-only Postgres driver into the client bundle and broke `npm run build` with a Turbopack "chunking context does not support external modules (node:module)" error. Added `lib/genre-utils.test.ts` (16 tests) covering that extracted logic. Also fixed two issues found during manual review: the post-login redirect (`app/login/page.tsx`, `components/auth/LoginForm.tsx`) defaulted to the nonexistent `/admin` instead of `/`, and the genre-name input had no client-side `maxLength` to match the existing 50-char server-side validation. Verified end-to-end against the real dev DB via Playwright click-throughs (logged-out redirect to `/login` with the Admin dropdown hidden, Admin dropdown → Genre navigation once logged in, add/duplicate-rejection/inline-edit/Esc-revert/delete-with-confirmation, toasts, blur-discard on an empty new row) plus `npm run lint`, `npx tsc --noEmit`, `npm run build`, and `npm test` (53/53 passing, up from 37).
 
