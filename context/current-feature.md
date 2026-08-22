@@ -1,16 +1,80 @@
-# Current Feature
+# Current Feature: Consoles CRUD
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- What does success look like? -->
+- Wire real create/edit/delete into `/brands/[brandId]/consoles`, replacing the
+  `AddConsoleDialog` no-op stub — same pattern as `10-brands-crud.md`'s
+  `BrandFormDialog`.
+- Generalize `AddConsoleDialog` → `ConsoleFormDialog` accepting an optional `console`
+  prop (edit mode), matching `form-console.png` exactly:
+  - Name — text, required, max 60 chars
+  - Short Name — text, required, max 30 chars (existing DB column, previously had no
+    UI field anywhere — this spec finally gives it one)
+  - Brand — select, all brands, editable (changes the console's `brandId` on save,
+    reassigning it away from the current route's brand)
+  - Year — select, 1980 → current year, ordered newest to oldest
+  - Generation — select, fixed `CONSOLE_GENERATIONS` list (1st–9th)
+  - Is Portable — single checkbox (not a Home/Portable radio pair)
+- `ConsoleCard`: edit/delete icon buttons, visible only when logged in, same
+  placement/treatment as `BrandCard`'s.
+- Delete blocks (does not cascade) when the console has 1+ games — mirrors
+  `deleteBrand`'s blocked-delete pattern: alert-dialog shows "Can't delete "X" — it
+  still has N game(s)" with a Close-only action; normal Cancel/Delete confirmation
+  when `gameCount` is 0.
+- `lib/consoles.ts`: extend with `createConsole`, `updateConsole`, `deleteConsole`.
+- New `lib/console-utils.ts` (no Prisma import, mirrors `lib/brand-utils.ts`): zod
+  schemas for name/shortName/year/generation, `CONSOLE_GENERATIONS`, sort helper,
+  error-message helper — unit tested.
+- `app/brands/[brandId]/consoles/actions.ts`: `createConsoleAction`,
+  `updateConsoleAction`, `deleteConsoleAction`, each independently re-checking
+  `auth()`.
+- New `ConsolesGrid.tsx` client component owning the console list as local state
+  (mirrors `BrandsGrid.tsx`) so add/edit/delete/reassign-brand update the grid
+  immediately with no manual refresh; reassigning a console to a different brand
+  removes it from the current (route-scoped) grid.
+- Toast confirms each successful add/edit/delete; toast surfaces errors on failure.
+- Logged-out users see no edit/delete controls.
+- `npm run build`, `npm run lint`, and `npm test` pass.
 
 ## Notes
 
-<!-- Additional context, constraints, or details from spec -->
+- Full spec: `context/feature/11-consoles-crud.md`. Two points in that spec were
+  superseded by user decisions during review (recorded here since the spec file
+  itself is not being edited):
+  - The spec proposed a Home/Portable `RadioGroup` — screenshot shows a single
+    "Is Portable" checkbox instead. Going with the checkbox.
+  - The spec explicitly said the form has no brand picker (create is scoped by the
+    route's `brandId`, moving a console between brands was called out as out of
+    scope). Screenshot shows a Brand select — going with an editable dropdown that
+    can reassign a console's brand.
+- Reference screenshot: `context/screenshots/form-console.png`.
+- Year is stored as `String?` (existing column, same pattern as `Game.year`) — the
+  select's options are generated `1980..currentYear`, value/label both the 4-digit
+  year string, sorted descending.
+- `CONSOLE_GENERATIONS`:
+  ```ts
+  export const CONSOLE_GENERATIONS = [
+    { value: 1, text: "1st (1972 - 1978)" },
+    { value: 2, text: "2nd (1976 - 1984)" },
+    { value: 3, text: "3rd (8 bits)" },
+    { value: 4, text: "4th (16 bits)" },
+    { value: 5, text: "5th (32 / 64 bits)" },
+    { value: 6, text: "6th (128 bits)" },
+    { value: 7, text: "7th (2004 - 2014)" },
+    { value: 8, text: "8th (2011 - present)" },
+    { value: 9, text: "9th (2020 - present)" },
+  ];
+  ```
+  The DB column (`Console.generation`) is `String?` — store the `text` label (matches
+  existing seeded data shape, e.g. `"6th (128 bits)"`), not the numeric `value`.
+- Brand list for the dropdown: reuse/add a lean `getAllBrands` (id/name only, sorted
+  by name) in `lib/brands.ts` rather than pulling in `getBrandsWithConsoleCounts`'s
+  extra `consoleCount` join.
+- No schema changes needed — `Console` already has all required columns.
 
 ## History
 

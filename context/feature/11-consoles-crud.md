@@ -12,30 +12,39 @@ as `10-brands-crud.md`, replacing the no-op stub left behind by
 - `AddConsoleDialog`'s `handleSubmit` gets a real Server Action instead of its
   `// TODO` no-op, using the same `zod` + `sonner` pattern as `09`/`10`.
 - Generalize `AddConsoleDialog` → `ConsoleFormDialog` accepting an optional `console`
-  prop for edit (Name/Year/Generation pre-filled, title/submit label switch), plus a
-  Home/Portable toggle for `isPortable` — the create form today has no field for it
-  even though `ConsoleFilterTabs` filters by it; this spec adds the field since a
-  console can't be meaningfully created without it.
+  prop for edit (title/submit label switch), matching `screenshots/form-console.png`
+  exactly:
+  - Name — text, required, max 60 chars
+  - Short Name — text, required, max 30 chars (existing DB column had no UI field
+    anywhere before this spec — see §9, resolved as an explicit field rather than
+    derived from `name`)
+  - Brand — select populated from all brands; see §9, this is a deviation from this
+    spec's original "no brand picker" scoping
+  - Year — select, 1980 → current year, newest first (not free text)
+  - Generation — select, fixed `CONSOLE_GENERATIONS` list (not free text)
+  - Is Portable — a single checkbox (not a Home/Portable radio pair — see §9, a
+    deviation from this spec's original proposal)
 - Edit entry point per `ConsoleCard`: icon button, visible only when logged in,
   opening `ConsoleFormDialog` in edit mode. `ConsoleCard` isn't a `<Link>` itself
   today (the "View N Games" button is), so this is simpler than `BrandCard`'s
   restructure in `10-brands-crud.md` — the edit/delete controls just need to sit
   alongside the existing content without interfering with that button.
 - Delete entry point per `ConsoleCard`: icon button, visible only when logged in,
-  opening the shared confirmation dialog (per `10-brands-crud.md`'s note on a shared
-  `ConfirmDeleteDialog`, if that's how `10` ends up implemented) warning about the
-  cascade to its games ("Delete '<name>'? This also deletes its N game(s). This can't
-  be undone.").
-- `lib/consoles.ts`: extend with `createConsole`, `updateConsole`, `deleteConsole`,
-  each scoped to/validated against the `brandId` route param.
+  opening a confirmation `alert-dialog`. Deletes are **blocked**, not cascaded, when
+  the console still has 1+ games — matching `10-brands-crud.md`'s resolution for
+  `Brand` → `Console` (that spec's cascade language had the same DB-enforces-it
+  assumption this one did; both ended up blocking instead). Dialog shows "Can't
+  delete "<name>" — it still has N game(s)" with a Close-only action in that case,
+  falling back to a normal Cancel/Delete confirmation when `gameCount` is 0.
+- `lib/consoles.ts`: extend with `createConsole`, `updateConsole`, `deleteConsole` —
+  each validates its `brandId` against the DB (not necessarily the route param,
+  since edit can reassign brands; see §9).
 - Server Actions (`app/brands/[brandId]/consoles/actions.ts`) wrapping those three,
   each re-checking `auth()` server-side.
 
 **Out of scope (explicitly not doing this now):**
 - Brand or Game CRUD — those are `10-brands-crud.md` and `12-games-crud.md`.
 - `logoUrl`/`consoleUrl` upload/edit flow — same non-goal as `Brand.logoUrl` in `10`.
-- Moving a console between brands (edit only changes this console's own fields, not
-  its `brandId`) — not implied by any current UI affordance.
 
 ## 3. Routes / Pages
 
@@ -44,8 +53,10 @@ as `10-brands-crud.md`, replacing the no-op stub left behind by
 | `/brands/[brandId]/consoles` | Server Component | View: no. Add/edit/delete: yes | Existing page; add/edit/delete now functional |
 
 No new routes — CRUD happens in place via dialogs, per `project-overview.md` §8.4.
-Create is implicitly scoped to the brand via the route's `brandId` param (the form
-itself has no brand picker).
+Create defaults to the route's `brandId` param, but the form's Brand select can
+change it before submitting (see §9) — and editing an existing console can reassign
+it to a different brand, at which point it disappears from the current page's grid
+immediately (no manual refresh) since the page is scoped by the route's `brandId`.
 
 ## 4. Data requirements
 
@@ -69,46 +80,57 @@ model Console {
 ```
 
 Queries needed (rough shape):
-- `createConsole(brandId, { name, year?, generation?, isPortable })` → `db.console.create`
-  — note `shortName` is `@map("short_name")` and required (non-nullable) on the
-  schema with no UI field for it anywhere yet; decide during implementation whether
-  to derive it from `name` (e.g. slugify) or add a field — flagged in §9.
-- `updateConsole(id, { name, year?, generation?, isPortable })` → `db.console.update`,
-  verify the console's `brandId` matches the route param before writing (defense
-  against a stale/tampered form submitting against the wrong brand)
-- `deleteConsole(id)` → `db.console.delete` (cascade handles `Game` cleanup)
+- `createConsole(brandId, { name, shortName, year?, generation?, isPortable })` →
+  `db.console.create`, scoped to the brand selected in the form (defaults to the
+  route's `brandId`, see §9) — re-verifies the selected brand exists before writing.
+- `updateConsole(id, { name, shortName, brandId, year?, generation?, isPortable })` →
+  `db.console.update`; `brandId` here is the (possibly changed) value from the form's
+  Brand select, not re-derived from the route — re-verifies the selected brand
+  exists before writing.
+- `deleteConsole(id)` → blocked (not cascaded) when the console still has 1+ games;
+  see §9 — this spec does **not** allow the DB-level `Game` cascade to fire from the
+  UI path, matching `10-brands-crud.md`'s resolution for `Brand` → `Console`.
 
-Zod schema: `name` required non-empty string; `year` optional, matches the existing
-4-digit pattern already used for `Game.year` validation in `GameFormDialog`
-(`/^\d{4}$/`) for consistency; `generation` optional string; `isPortable` boolean,
-default `false`.
+Zod schema: `name` required, max 60 chars; `shortName` required, max 30 chars;
+`brandId` required non-empty string (re-checked against the DB, not just
+non-empty); `year` optional, matches the existing 4-digit pattern already used for
+`Game.year` validation in `GameFormDialog` (`/^\d{4}$/`) for consistency — but
+selected from a fixed dropdown (1980 → current year) rather than freely typed;
+`generation` optional string, selected from the fixed `CONSOLE_GENERATIONS` list
+rather than freely typed; `isPortable` boolean, default `false`.
 
 ## 5. UI requirements
 
-Reference screenshot: `screenshots/consoles.png` for the existing read-only layout —
-this spec doesn't change the grid's visual layout, only adds controls to each card
-and a Home/Portable field to the form.
+Reference screenshots: `screenshots/consoles.png` for the existing read-only grid
+layout (unchanged, only adds controls to each card) and `screenshots/form-console.png`
+for the Add/Edit Console dialog itself.
 
 Key elements:
-- `ConsoleFormDialog`: Name/Year/Generation fields (existing) plus a new
-  Home/Portable choice — reuse the `RadioGroup` pattern already established in
-  `GameFormDialog`'s Owned/Wishlist toggle for visual consistency.
+- `ConsoleFormDialog`: Name/Short Name text fields; Brand/Year/Generation selects
+  (`components/ui/select`, same primitive as `GamesControls`' sort dropdown); a
+  single Is Portable checkbox (`components/ui/checkbox`, same primitive as
+  `GameFormDialog`'s playable-status checkboxes) rather than a radio pair.
 - `ConsoleCard`: add edit/delete icon buttons (visible only when logged in),
   positioned consistently with wherever `10-brands-crud.md` lands on `BrandCard`'s
   treatment — same corner, same icon set, same size.
-- Delete confirmation names the cascade using the console's live `gameCount`
-  (already available from `getBrandConsoles`).
+- Delete confirmation names the block using the console's live `gameCount` (already
+  available from `getBrandConsoles`), not a cascade warning — see the delete entry
+  point note above.
 - Toast confirms each successful add/edit/delete; toast surfaces errors on failure.
 
 Component breakdown:
 - `components/consoles/ConsoleFormDialog.tsx` — renamed/generalized from
-  `AddConsoleDialog.tsx`, accepts `console?: { id, name, year, generation, isPortable }`
+  `AddConsoleDialog.tsx`, accepts `console?: { id, name, shortName, brandId, year,
+  generation, isPortable }`
 - `components/consoles/ConsoleCard.tsx` — updated to render edit/delete controls
   when `isLoggedIn`
+- `components/consoles/ConsolesGrid.tsx` — new client component owning the console
+  list as local state (mirrors `10-brands-crud.md`'s `BrandsGrid.tsx`) so
+  add/edit/delete/reassign update the grid immediately without a router refresh
 - `app/brands/[brandId]/consoles/actions.ts` — `createConsoleAction`,
   `updateConsoleAction`, `deleteConsoleAction`
-- `app/brands/[brandId]/consoles/page.tsx` — passes `isLoggedIn` through to
-  `ConsoleCard` (already computed there)
+- `app/brands/[brandId]/consoles/page.tsx` — now just fetches data (including the
+  full brand list, for the form's Brand select) and hands off to `ConsolesGrid`
 
 ## 6. States to handle
 
@@ -121,28 +143,31 @@ Component breakdown:
         confirms
   - [ ] Edit a console → fields update in place, toast confirms
   - [ ] Delete a console with 0 games → removed immediately after confirmation
-  - [ ] Delete a console with N games → confirmation names the cascade explicitly,
-        removed along with its games after confirmation
+  - [ ] Delete a console with N games → blocked; dialog explains it still has N
+        game(s) and offers only Close, nothing is removed
   - [ ] Edit/delete controls hidden entirely when logged out
   - [ ] New/edited console respects the active `?type=` filter tab immediately (e.g.
         marking a console Portable while the Home filter is active makes it disappear
         from the current view without a manual refresh)
+  - [ ] Reassigning a console to a different brand via edit removes it from the
+        current brand's grid immediately
 
 ## 7. Acceptance criteria
 
 - [ ] Logged-in users can add a console via the existing "+ Add Console" button,
-      which now actually persists (previously a no-op) and correctly attaches to the
-      current `brandId`
-- [ ] Logged-in users can edit a console's name/year/generation/portability from its card
+      which now actually persists (previously a no-op) and defaults to the current
+      `brandId` (changeable via the form's Brand select)
+- [ ] Logged-in users can edit a console's name/short name/brand/year/generation/
+      portability from its card
 - [ ] Logged-in users can delete a console from its card, gated behind a confirmation
-      modal that mentions the cascade to its games
-- [ ] Deleting a console removes its games (already enforced by the DB; this spec
-      verifies the UI path exercises it correctly)
+      modal — blocked (not cascaded) when the console still has games, per §9
 - [ ] Logged-out users see no edit/delete controls anywhere on the page
-- [ ] Server Actions re-verify `auth()` independently of the page-level session check,
-      and re-verify the console being edited/deleted actually belongs to the
-      `brandId` in the URL
-- [ ] Changes are visible immediately without a manual refresh
+- [ ] Server Actions re-verify `auth()` independently of the page-level session
+      check, and re-verify the console's selected brand actually exists before
+      writing (no longer required to match the route's `brandId`, since edit can
+      reassign it — see §9)
+- [ ] Changes are visible immediately without a manual refresh, including a
+      reassigned console disappearing from its old brand's grid
 - [ ] `npm run build`, `npm run lint`, and `npm test` pass
 
 ## 8. Dependencies
@@ -157,15 +182,28 @@ Component breakdown:
 
 ## 9. Notes / open questions
 
-- **Needs a decision before/during implementation:** `Console.shortName` is a
-  required (non-nullable) DB column with no corresponding field anywhere in the
-  existing UI (create form, edit form, or display). Options: (a) derive it
-  automatically from `name` on create (e.g. strip whitespace/lowercase, matching
-  whatever convention the seeded data already uses — check `01-schema-review.md`/the
-  seed script for precedent), or (b) add a `Short Name` field to the form. Check the
-  legacy migration script (`scripts/migrate-mysql-legacy.ts`) or existing seeded rows
-  for what `shortName` is actually used for before deciding — it may just be a
-  display convenience nothing in the current UI reads.
-- Home/Portable field is new to the form (the existing `AddConsoleDialog` stub
-  doesn't have it) — confirm the RadioGroup-based treatment reads well before
-  finalizing, no screenshot covers the create/edit form for consoles.
+Both items below were originally open questions in this spec; both were resolved
+against `screenshots/form-console.png` (added after this spec was first written) —
+recorded here as deviations from the spec's original text:
+
+- **Resolved: `Console.shortName` gets an explicit form field.** It's a required
+  (non-nullable) DB column that had no UI field anywhere before this spec. Rather
+  than deriving it from `name`, the screenshot shows a dedicated "Short Name" text
+  input (max 30 chars) alongside "Name" (max 60 chars) — implemented as such.
+- **Resolved: Is Portable is a single checkbox, not a Home/Portable radio pair.**
+  This spec originally proposed reusing `GameFormDialog`'s Owned/Wishlist
+  `RadioGroup` pattern for symmetry. The screenshot instead shows one "Is Portable"
+  checkbox (unchecked = Home) — implemented as such, matching the schema's single
+  `isPortable` boolean column more directly than a two-option radio group would.
+- **Deviation: the form has a Brand select after all.** This spec originally said
+  create is scoped entirely by the route's `brandId` with no picker, and explicitly
+  called moving a console between brands out of scope. The screenshot shows a Brand
+  dropdown (populated from all brands) pre-filled to the current brand — implemented
+  as an editable field: create defaults to the route's brand but can target any
+  brand, and editing can reassign a console to a different brand entirely. When a
+  console is reassigned away from the brand whose page you're on, it's removed from
+  that page's grid immediately.
+- Year and Generation are selects, not free text as originally implied by `05`'s
+  stub fields — Year is generated 1980 → current year (newest first); Generation
+  uses a fixed `CONSOLE_GENERATIONS` list (1st–9th, with the same value/label pairs
+  used elsewhere in the app for this field).

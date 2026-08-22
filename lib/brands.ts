@@ -3,6 +3,20 @@ import { brandNameSchema, brandOriginSchema, type BrandOption } from "@/lib/bran
 
 export type BrandWithConsoleCount = BrandOption;
 
+export interface BrandOptionListItem {
+  id: string;
+  name: string;
+}
+
+export async function getAllBrands(): Promise<BrandOptionListItem[]> {
+  const brands = await db.brand.findMany({
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  });
+
+  return brands;
+}
+
 export async function getBrandsWithConsoleCounts(): Promise<
   BrandWithConsoleCount[]
 > {
