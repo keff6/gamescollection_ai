@@ -1,80 +1,16 @@
-# Current Feature: Consoles CRUD
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Wire real create/edit/delete into `/brands/[brandId]/consoles`, replacing the
-  `AddConsoleDialog` no-op stub — same pattern as `10-brands-crud.md`'s
-  `BrandFormDialog`.
-- Generalize `AddConsoleDialog` → `ConsoleFormDialog` accepting an optional `console`
-  prop (edit mode), matching `form-console.png` exactly:
-  - Name — text, required, max 60 chars
-  - Short Name — text, required, max 30 chars (existing DB column, previously had no
-    UI field anywhere — this spec finally gives it one)
-  - Brand — select, all brands, editable (changes the console's `brandId` on save,
-    reassigning it away from the current route's brand)
-  - Year — select, 1980 → current year, ordered newest to oldest
-  - Generation — select, fixed `CONSOLE_GENERATIONS` list (1st–9th)
-  - Is Portable — single checkbox (not a Home/Portable radio pair)
-- `ConsoleCard`: edit/delete icon buttons, visible only when logged in, same
-  placement/treatment as `BrandCard`'s.
-- Delete blocks (does not cascade) when the console has 1+ games — mirrors
-  `deleteBrand`'s blocked-delete pattern: alert-dialog shows "Can't delete "X" — it
-  still has N game(s)" with a Close-only action; normal Cancel/Delete confirmation
-  when `gameCount` is 0.
-- `lib/consoles.ts`: extend with `createConsole`, `updateConsole`, `deleteConsole`.
-- New `lib/console-utils.ts` (no Prisma import, mirrors `lib/brand-utils.ts`): zod
-  schemas for name/shortName/year/generation, `CONSOLE_GENERATIONS`, sort helper,
-  error-message helper — unit tested.
-- `app/brands/[brandId]/consoles/actions.ts`: `createConsoleAction`,
-  `updateConsoleAction`, `deleteConsoleAction`, each independently re-checking
-  `auth()`.
-- New `ConsolesGrid.tsx` client component owning the console list as local state
-  (mirrors `BrandsGrid.tsx`) so add/edit/delete/reassign-brand update the grid
-  immediately with no manual refresh; reassigning a console to a different brand
-  removes it from the current (route-scoped) grid.
-- Toast confirms each successful add/edit/delete; toast surfaces errors on failure.
-- Logged-out users see no edit/delete controls.
-- `npm run build`, `npm run lint`, and `npm test` pass.
+<!-- What does success look like? -->
 
 ## Notes
 
-- Full spec: `context/feature/11-consoles-crud.md`. Two points in that spec were
-  superseded by user decisions during review (recorded here since the spec file
-  itself is not being edited):
-  - The spec proposed a Home/Portable `RadioGroup` — screenshot shows a single
-    "Is Portable" checkbox instead. Going with the checkbox.
-  - The spec explicitly said the form has no brand picker (create is scoped by the
-    route's `brandId`, moving a console between brands was called out as out of
-    scope). Screenshot shows a Brand select — going with an editable dropdown that
-    can reassign a console's brand.
-- Reference screenshot: `context/screenshots/form-console.png`.
-- Year is stored as `String?` (existing column, same pattern as `Game.year`) — the
-  select's options are generated `1980..currentYear`, value/label both the 4-digit
-  year string, sorted descending.
-- `CONSOLE_GENERATIONS`:
-  ```ts
-  export const CONSOLE_GENERATIONS = [
-    { value: 1, text: "1st (1972 - 1978)" },
-    { value: 2, text: "2nd (1976 - 1984)" },
-    { value: 3, text: "3rd (8 bits)" },
-    { value: 4, text: "4th (16 bits)" },
-    { value: 5, text: "5th (32 / 64 bits)" },
-    { value: 6, text: "6th (128 bits)" },
-    { value: 7, text: "7th (2004 - 2014)" },
-    { value: 8, text: "8th (2011 - present)" },
-    { value: 9, text: "9th (2020 - present)" },
-  ];
-  ```
-  The DB column (`Console.generation`) is `String?` — store the `text` label (matches
-  existing seeded data shape, e.g. `"6th (128 bits)"`), not the numeric `value`.
-- Brand list for the dropdown: reuse/add a lean `getAllBrands` (id/name only, sorted
-  by name) in `lib/brands.ts` rather than pulling in `getBrandsWithConsoleCounts`'s
-  extra `consoleCount` join.
-- No schema changes needed — `Console` already has all required columns.
+<!-- Additional context, constraints, or details from spec -->
 
 ## History
 
@@ -94,3 +30,4 @@ In Progress
 - **2026-08-20** — Games Page: built `/consoles/[consoleId]/games` (`lib/games.ts`, `getConsoleGames` + exported `sortGames`) as a search/sort/paginated games list — search-by-title (debounced client-side, synced to a `q` URL param), sort by Title/Year/Rating (`sort` URL param), and "Show More" pagination in batches of 25 (`GAMES_PAGE_SIZE`) via a colocated Server Action (`loadMoreGames`). Since `year` is a string column (same issue as the consoles page), sorting/pagination is done in-memory rather than at the DB level — acceptable at this app's personal-collection scale. Game cards (`components/games/GameCard.tsx`) show title, rating badge, and YEAR/GENRE/DEVELOPER-PUBLISHER columns. Built the Add/Edit Game modal (`components/games/GameFormDialog.tsx`) per spec — genre multi-select checkboxes, Owned/Wishlist toggle that conditionally shows/hides media-status radios (Incomplete/Complete/New/Digital) and playable-status checkboxes (Backlog/Playing/Finished), year/rating/developer/publisher/notes fields — form UI only, no real persistence yet (deferred to `12-games-crud.md`, Phase 3). Added shadcn `select`, `checkbox`, `radio-group`, `textarea`, `badge` (no theme regressions). Caught during browser testing: the form's native HTML `required`/`min`/`max` attributes were blocking submission with unstyled browser tooltips before the custom validation logic ever ran — fixed by adding `noValidate` to the form so the styled inline error messages actually render. Mid-implementation, restructured routes to be more descriptive per user request: `/brands/[brandId]` → `/brands/[brandId]/consoles` and `/consoles/[consoleId]` → `/consoles/[consoleId]/games` (old bare paths now 404, no redirect added — pre-launch personal app, no external links to preserve); updated all `Link` hrefs, the breadcrumb, the moved Server Action's import path, and the route mentions across `project-overview.md`/`ROADMAP.md`/the feature specs. Added `lib/games.test.ts` (4 tests) for `sortGames`'s branching logic (title/year/rating comparators, missing-year and unrated-game fallback ordering), following the same "test pure aggregation logic, skip thin Prisma passthroughs" precedent as the dashboard page. Verified against the real seeded dataset (PlayStation 4, 251 games) via headless-Chromium click-throughs (pagination, search, sort, modal validation, 404s, mobile layout) and `npm run lint`, `npm run build`, `npm test` (28/28 passing).
 - **2026-08-20** — Auth Login: added NextAuth v5 (Auth.js) with a Credentials provider (`auth.ts`), backed by the existing `User` model — JWT sessions (no Prisma adapter, since Credentials doesn't support database sessions), route handler at `app/api/auth/[...nextauth]/route.ts`. Built `/login` (`app/login/page.tsx`, server component that redirects to `callbackUrl`/`/admin` if already authenticated — no form flash) and `components/auth/LoginForm.tsx` (client form, generic "Invalid email or password" error with no field-level leak, clears password and shows a disabled/loading state on submit). Extracted the credential-matching branching logic out of `authorize()` into `lib/verify-credentials.ts` so it's unit-testable without hitting the DB (`lib/verify-credentials.test.ts`, 4 tests: unknown user, no password set, wrong password, correct password). Added `scripts/seed-admin.ts` (`npm run seed:admin`) — env-driven (`ADMIN_EMAIL`/`ADMIN_USERNAME`/`ADMIN_PASSWORD`), bcrypt-hashes the password, upserts the single admin `User` row idempotently (verified by running twice — same user ID both times). New deps: `next-auth@beta` (v5), `bcryptjs` (pure JS, no native build step, for Vercel). New env vars added to `.env`/`.env.example`: `AUTH_SECRET`, `ADMIN_EMAIL`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`; fixed `.gitignore`'s blanket `.env*` rule (added `!.env.example`) since it was silently excluding the example file from being tracked at all. Exported `GamepadIcon` from `Navbar.tsx` so the login card could reuse the existing wordmark instead of duplicating the SVG. Verified via Playwright click-through (wrong password → inline error with email preserved/password cleared; correct login → redirect to `/admin`, expected 404 since that route doesn't exist until the admin-CRUD phase; session survives reload; re-visiting `/login` while authenticated redirects immediately) plus `npm run lint`, `npx tsc --noEmit`, `npm run build`, and `npm test` (32/32 passing, up from 28 — required Node ≥ the `.nvmrc`-pinned `25.6.1`, same constraint as the rest of the test suite). Out of scope, deferred to `08-auth-middleware.md`: protecting `/admin/*` or any other route, and wiring the Navbar's `isLoggedIn` stub (plus the brands/consoles/games pages' matching stubs) to the real session.
 - **2026-08-20** — Auth Middleware & Session-Aware UI: added `proxy.ts` protecting `/admin/:path*`, redirecting unauthenticated requests to `/login?callbackUrl=<original path>`. Discovered mid-implementation that Next.js 16 renamed `middleware.ts` → `proxy.ts` and Proxy now defaults to the **Node.js runtime** (confirmed via `node_modules/next/dist/docs`), not the Edge runtime the spec's "no Prisma/bcryptjs" constraint assumed — so the planned edge-safe `auth.config.ts` split was dropped as unnecessary; `proxy.ts` just wraps the full `auth.ts` directly (`export default auth((req) => {...})`), matching NextAuth v5's own recommended pattern. Per user request mid-load, replaced the Navbar's inline "Log Out" text link with a circular initials avatar (`lib/get-initials.ts`, tested — first+last word initials, single-word fallback, empty-string placeholder) that opens a shadcn `dropdown-menu` with a single "Log Out" item calling `signOut({ callbackUrl: "/" })`; built as `components/auth/UserMenu.tsx`, used in both the desktop bar and the mobile hamburger menu (replaced the originally-planned `LogoutButton.tsx`). Added shadcn `dropdown-menu` and `avatar` (no theme regressions). `app/layout.tsx` is now an async server component reading `auth()` and passing `user` down to `Navbar` (replacing the `isLoggedIn` boolean prop); the brands/consoles/games pages' `isLoggedIn = false` stub constants became `const isLoggedIn = !!(await auth())`. Verified via curl (307 to `/login?callbackUrl=%2Fadmin%2Fwhatever` since `/admin` pages don't exist until Phase 3) and Playwright (avatar shows correct initials, dropdown opens/closes on click/Esc, Log Out clears the session and redirects to `/`, same behavior in the mobile menu, "+ Add ..." buttons correctly hidden/shown by session state on all three pages) plus `npm run lint`, `npx tsc --noEmit`, `npm run build` (confirms `ƒ Proxy (Middleware)`, no Edge runtime warnings), and `npm test` (37/37, 5 new for `getInitials`). Side effect: `/` and `/brands` moved from statically prerendered to dynamic (`ƒ`) in the build output, since the root layout now reads the session cookie on every request — expected and acceptable at this app's personal-collection scale (no perf target per the PRD).
+- **2026-08-21** — Consoles CRUD: wired real create/edit/delete into `/brands/[brandId]/consoles`, replacing the `AddConsoleDialog` no-op stub. Generalized it to `components/consoles/ConsoleFormDialog.tsx` (accepting an optional `console` prop for edit), matching `screenshots/form-console.png`: Name (max 60)/Short Name (max 30) text fields, Brand/Year/Generation `select` dropdowns, and a single "Is Portable" checkbox. Year options are generated 1980 → current year (newest first); Generation is a fixed `CONSOLE_GENERATIONS` list (1st–9th) stored as its text label to match the existing seeded data shape. **Two deviations from the written spec (`11-consoles-crud.md`), resolved against the screenshot and reflected back into that spec file:** (1) Is Portable is a single checkbox rather than the spec's proposed Home/Portable `RadioGroup` pair; (2) the form has an editable Brand `select` (all brands) rather than no brand picker at all — create defaults to the route's brand but can target any brand, and editing can reassign a console to a different brand entirely, at which point it disappears from the current page's grid immediately. Also resolved `Console.shortName`'s long-standing "no UI field" gap from `05-consoles-page.md` as an explicit form field rather than deriving it from `name`. Delete blocks (does not cascade) when a console still has 1+ games, mirroring `10-brands-crud.md`'s `deleteBrand` precedent — alert-dialog shows "Can't delete "X" — it still has N game(s)" with a Close-only action, falling back to normal Cancel/Delete when `gameCount` is 0. Extended `lib/consoles.ts` with `createConsole`/`updateConsole`/`deleteConsole` and added `lib/brands.ts`'s lean `getAllBrands` (id/name only) for the form's Brand dropdown. Added `lib/console-utils.ts` (no Prisma import, mirrors `lib/brand-utils.ts`) with the zod schemas, `CONSOLE_GENERATIONS`, `getConsoleYearOptions`, `sortConsolesByYear`, and an error-message helper — 28 unit tests in `lib/console-utils.test.ts`; the Prisma-backed CRUD in `lib/consoles.ts` and the Server Actions in the new `app/brands/[brandId]/consoles/actions.ts` were intentionally left untested, matching the same "skip thin DB passthroughs" precedent as brands/genres. Added `components/consoles/ConsolesGrid.tsx` (mirrors `BrandsGrid.tsx`) as a client component owning the console list as local state so add/edit/delete/reassign update the grid immediately without a router refresh. Verified against the real dev DB via a Playwright driver script covering login, add (with all five fields), edit, blocked-delete (console with games), successful delete (console with none), brand reassignment (console disappears from its old brand's grid, appears under the new one), and confirmed zero edit/delete controls render for a logged-out session — DB restored to its original 27-console state afterward — plus `npm run lint`, `npx tsc --noEmit`, `npm run build`, and `npm test` (99/99 passing, up from 71).
