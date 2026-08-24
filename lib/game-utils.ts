@@ -103,7 +103,7 @@ export const gameSagaTagSchema = z
 
 export const gameSagaSchema = z.array(gameSagaTagSchema).optional().default([]);
 
-const GAME_YEAR_START = 1985;
+const GAME_YEAR_START = 1970;
 
 export function getGameYearOptions(
   currentYear: number = new Date().getFullYear()

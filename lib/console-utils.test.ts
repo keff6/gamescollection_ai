@@ -8,6 +8,7 @@ import {
   consoleShortNameSchema,
   consoleYearSchema,
   getConsoleYearOptions,
+  normalizeGenerationValue,
   sortConsolesByYear,
   toConsoleErrorMessage,
 } from "@/lib/console-utils";
@@ -112,14 +113,34 @@ describe("CONSOLE_GENERATIONS", () => {
 });
 
 describe("getConsoleYearOptions", () => {
-  it("returns years from the given current year down to 1980, newest first", () => {
-    expect(getConsoleYearOptions(1983)).toEqual(["1983", "1982", "1981", "1980"]);
+  it("returns years from the given current year down to 1970, newest first", () => {
+    expect(getConsoleYearOptions(1973)).toEqual(["1973", "1972", "1971", "1970"]);
   });
 
   it("defaults to the current year when no argument is given", () => {
     const options = getConsoleYearOptions();
     expect(options[0]).toBe(String(new Date().getFullYear()));
-    expect(options[options.length - 1]).toBe("1980");
+    expect(options[options.length - 1]).toBe("1970");
+  });
+});
+
+describe("normalizeGenerationValue", () => {
+  it("returns an empty string for null or empty input", () => {
+    expect(normalizeGenerationValue(null)).toBe("");
+    expect(normalizeGenerationValue("")).toBe("");
+  });
+
+  it("maps a legacy bare-number generation to its full label", () => {
+    expect(normalizeGenerationValue("1")).toBe("1st (1972 - 1978)");
+    expect(normalizeGenerationValue("6")).toBe("6th (128 bits)");
+  });
+
+  it("passes through a value already stored as a full label", () => {
+    expect(normalizeGenerationValue("6th (128 bits)")).toBe("6th (128 bits)");
+  });
+
+  it("returns an empty string for a value matching no known generation", () => {
+    expect(normalizeGenerationValue("not a generation")).toBe("");
   });
 });
 

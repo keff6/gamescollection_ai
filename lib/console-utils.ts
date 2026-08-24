@@ -17,7 +17,7 @@ export const CONSOLE_GENERATIONS: ConsoleGeneration[] = [
   { value: 9, text: "9th (2020 - present)" },
 ];
 
-const CONSOLE_YEAR_START = 1980;
+const CONSOLE_YEAR_START = 1970;
 
 export function getConsoleYearOptions(currentYear: number = new Date().getFullYear()): string[] {
   const years: string[] = [];
@@ -25,6 +25,14 @@ export function getConsoleYearOptions(currentYear: number = new Date().getFullYe
     years.push(String(year));
   }
   return years;
+}
+
+export function normalizeGenerationValue(value: string | null): string {
+  if (!value) return "";
+  const match = CONSOLE_GENERATIONS.find(
+    (generation) => generation.text === value || String(generation.value) === value
+  );
+  return match?.text ?? "";
 }
 
 export interface ConsoleOption {

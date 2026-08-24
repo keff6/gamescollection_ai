@@ -4,6 +4,7 @@ import { ConsoleFormDialog } from "@/components/consoles/ConsoleFormDialog";
 import { Button } from "@/components/ui/button";
 import type { BrandOptionListItem } from "@/lib/brands";
 import type { ConsoleWithGameCount } from "@/lib/consoles";
+import { normalizeGenerationValue } from "@/lib/console-utils";
 
 export function ConsoleCard({
   console: consoleItem,
@@ -39,7 +40,7 @@ export function ConsoleCard({
                 shortName: consoleItem.shortName,
                 brandId: consoleItem.brandId,
                 year: consoleItem.year ?? "",
-                generation: consoleItem.generation ?? "",
+                generation: normalizeGenerationValue(consoleItem.generation),
                 isPortable: consoleItem.isPortable,
               }}
               onSuccess={onUpdated}

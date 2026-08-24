@@ -88,7 +88,11 @@ export function BrandFormDialog({
         <DialogHeader>
           <DialogTitle>{isEdit ? "Edit Brand" : "Add Brand"}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+        <form
+          onSubmit={handleSubmit}
+          noValidate
+          className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto pr-1"
+        >
           <div className="flex flex-col gap-1.5">
             <Label htmlFor="brand-name">Name *</Label>
             <Input

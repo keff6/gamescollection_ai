@@ -1,16 +1,31 @@
-# Current Feature
+# Current Feature: Responsive Pass
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- What does success look like? -->
+- Fix `BrandFormDialog` and `ConsoleFormDialog`: add `max-h-[70vh] overflow-y-auto` to their form bodies, matching `GameFormDialog`'s existing pattern, so the Save button stays reachable on short mobile viewports
+- Verify (screenshots) at desktop (~1280px+), tablet (~768px), and mobile (~375px) widths, for every Phase 3 CRUD surface:
+  - `BrandFormDialog` / `ConsoleFormDialog` / `GameFormDialog` open over their grid pages, including a pre-filled edit and a visible validation error
+  - `BrandCard` / `ConsoleCard` / `GameCard` edit+delete icon buttons — no overlap, tappable at 375px
+  - Delete confirmation `alert-dialog` (blocked "has children" variant + normal confirm variant) at 375px
+  - `/admin/genres`'s `GenresTable` — inline edit, "+ Add Genre" row, delete confirmation, at 375px (highest overflow risk, table-based layout)
+  - Navbar's Admin dropdown — desktop dropdown + mobile hamburger-menu variant, confirm "Genre" item renders correctly
+- Fix any real issues found during the audit (expect none beyond the two dialogs above, per spec)
+- `npm run build` and `npm run lint` pass; no new tests expected (pure styling/layout spec)
 
 ## Notes
 
-<!-- Additional context, constraints, or details from spec -->
+- Scope: Phase 3 CRUD surfaces only (`10-brands-crud.md`, `11-consoles-crud.md`, `12-games-crud.md`, `09-admin-genres.md`) — these were never screenshot-verified at mobile/tablet widths, unlike the Phase 1 read-only pages
+- Out of scope: re-verifying Phase 1 pages (dashboard/brands/consoles/games grids, charts, filter tabs), new breakpoints beyond existing `sm`/`md`/`lg`, landscape-specific handling beyond the `max-h-[70vh]` fix
+- `GameFormDialog` already has the `max-h-[70vh] overflow-y-auto` treatment (added in `12-games-crud.md` for its long form) — this spec just extends the same fix to `BrandFormDialog` and `ConsoleFormDialog`
+- No schema/query changes — styling/layout only
+- No new reference mocks for mobile; "correct" = no clipped content, no horizontal page-body scroll, all controls reachable/tappable — not a pixel match
+- Dependencies: `02-app-shell-navbar.md` (breakpoint conventions, mobile hamburger menu), `09`/`10`/`11`/`12` (surfaces being verified/fixed)
+
+**Scope addition (user-approved, found during the audit pass):** the Console/Game Edit forms' Year and Generation selects showed blank instead of the console's/game's actual value for legacy pre-1980s data — not a responsive/layout bug (reproduced identically at desktop width), but found while opening every dialog at each width. Root cause, confirmed via a live DB query: `Console.year` ranges 1977–2020 and `Game.year` ranges 1977–2025, but `CONSOLE_YEAR_START`/`GAME_YEAR_START` were 1980/1985, so any pre-range year had no matching `<SelectItem>`; separately, all 27 seeded `Console.generation` values are bare digit strings ("1".."9"), never the full `CONSOLE_GENERATIONS` label text ("1st (1972 - 1978)") the Select actually compares against — so every console's Generation showed blank on edit, not just Atari 2600. Fixed by widening both year-start constants to 1970 (`lib/console-utils.ts`, `lib/game-utils.ts`) and adding `normalizeGenerationValue()` (`lib/console-utils.ts`) to map a legacy bare-digit generation to its label before the form initializes, applied at the single call site building the edit-form props (`ConsoleCard.tsx`). Saving an edited console now persists the full label going forward (self-healing). 4 new unit tests added to `lib/console-utils.test.ts`; `getConsoleYearOptions`/`getGameYearOptions` existing tests updated for the new 1970 start.
 
 ## History
 

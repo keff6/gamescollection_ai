@@ -163,14 +163,14 @@ describe("gameSagaTagSchema / gameSagaSchema", () => {
 });
 
 describe("getGameYearOptions", () => {
-  it("returns years from the given current year down to 1985, newest first", () => {
-    expect(getGameYearOptions(1988)).toEqual(["1988", "1987", "1986", "1985"]);
+  it("returns years from the given current year down to 1970, newest first", () => {
+    expect(getGameYearOptions(1973)).toEqual(["1973", "1972", "1971", "1970"]);
   });
 
   it("defaults to the current year when no argument is given", () => {
     const options = getGameYearOptions();
     expect(options[0]).toBe(String(new Date().getFullYear()));
-    expect(options[options.length - 1]).toBe("1985");
+    expect(options[options.length - 1]).toBe("1970");
   });
 });
 
