@@ -1,56 +1,22 @@
-# Current Feature: Empty / Loading / Error States Audit
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Add `app/error.tsx` — a root Client Component error boundary styled to match
-  `app/page.tsx`'s existing inline "Dashboard unavailable" fallback, with a
-  "Try again" button calling the `reset()` prop Next.js passes in
-- Fix `components/games/GamesList.tsx`'s `loadMoreGames` call (~line 108,
-  pagination "Show More") to wrap the Server Action call in `try`/`catch`,
-  matching the `toast.error` pattern already used by add/edit/delete — on
-  failure, leave the already-loaded games in place (no partial state change)
-- Full read-only audit pass confirming existing loading/empty/error states
-  across five prior features are still correct and consistent:
-  - Loading: `app/loading.tsx`, `app/brands/loading.tsx`,
-    `app/admin/genres/loading.tsx`, `app/brands/[brandId]/consoles/loading.tsx`,
-    `app/consoles/[consoleId]/games/loading.tsx` — each should render a
-    layout-matching skeleton, not a generic spinner
-  - Empty states: `BrandsGrid` ("No brands yet"), `ConsolesGrid` (zero-total vs.
-    zero-after-filter), `GamesList` ("No games yet" vs. "No games match your
-    search"), `GenresTable` ("No genres yet")
-  - Initial-fetch error: the four inline `try`/`catch` fallbacks in
-    `app/page.tsx`, `app/brands/page.tsx`,
-    `app/brands/[brandId]/consoles/page.tsx`,
-    `app/consoles/[consoleId]/games/page.tsx` still `console.error` + render a
-    styled fallback (not raw-thrown)
-  - Mutation error: `BrandFormDialog`, `ConsoleFormDialog`, `GameFormDialog`,
-    `GenresTable`'s add/edit/delete all still surface failures via
-    `toast.error` without closing the dialog or discarding input
-- Any drift found during the audit gets fixed now, not deferred
-- `npm run build`, `npm run lint`, and `npm test` pass
+<!-- What does success look like? -->
 
 ## Notes
 
-- This is an audit, not a from-scratch build — most states already exist from
-  Phase 1 pages and Phase 3 CRUD work.
-- Out of scope: any new loading/empty/error *design* (reuse existing visual
-  language exactly), retry/offline handling beyond `error.tsx`'s built-in
-  `reset()`, redesigning `app/admin/genres/page.tsx`'s existing inline
-  try/catch (just verify it's still consistent).
-- Considered per-route `error.tsx` files instead of one root one, but rejected:
-  the four data-fetching pages already self-catch and never rethrow, so a
-  route-level boundary would be redundant. One root `app/error.tsx` covers the
-  actual gap (client-side/mutation-time throws bypassing those inline catches).
-  Revisit if a future page's data-fetching pattern doesn't self-catch.
-- Spec file: `context/feature/14-empty-loading-error-states.md`
+<!-- Additional context, constraints, or details from spec -->
 
 ## History
 
 <!-- Keep this updated. Earliest to Latest -->
+
+- **2026-08-24** — Empty / Loading / Error States Audit: added `app/error.tsx`, a root Client Component error boundary styled to match `app/page.tsx`'s existing inline "Dashboard unavailable" fallback (centered heading/subtext + a `reset()`-wired "Try again" button), covering client-side/mutation-time throws that bypass the four data-fetching pages' own inline `try`/`catch` fallbacks — confirmed via Next 16 docs (`node_modules/next/dist/docs`) that `error.tsx` wraps `page.tsx`/nested `layout.tsx` but not the layout/template above it in the same segment, so the root boundary renders inside `app/layout.tsx`'s `<main>` with the Navbar persisting above it, same as every other inline fallback in this app. Fixed `components/games/GamesList.tsx`'s `handleShowMore` (pagination "Show More"), which called the `loadMoreGames` Server Action with no error handling at all, unlike its sibling add/edit/delete calls — wrapped it in `try`/`catch` with the same `toast.error` treatment, leaving the already-loaded games in place on failure instead of failing silently. Full audit pass across five prior features found no drift: all five `loading.tsx` skeletons (`app/`, `app/brands/`, `app/admin/genres/`, `app/brands/[brandId]/consoles/`, `app/consoles/[consoleId]/games/`) still match their pages' real grid/header layouts; all four list components' empty states (`BrandsGrid`, `ConsolesGrid`, `GamesList`, `GenresTable`) still render distinct messages; all four inline initial-fetch `try`/`catch` fallbacks still `console.error` and render a styled (not raw-thrown) message. One correction to the spec's own audit checklist: `BrandFormDialog`/`ConsoleFormDialog`/`GameFormDialog`'s create/edit failures surface via an inline `setError` message inside the dialog (not `toast.error` as the spec assumed) — dialog stays open and input is preserved either way, so the underlying acceptance criterion holds; `toast.error` is reserved for delete-confirmation failures (`BrandsGrid`/`ConsolesGrid`/`GamesList`/`GenresTable`), which have no field to annotate inline. Verified end-to-end against the real dev DB and dev server via a Playwright driver script: baseline "Show More" pagination (PlayStation 4, 251 games) advances 25→50; a temporarily-injected throw inside `loadMoreGames` confirms the toast fires and the list stays at 25/251; a temporarily-injected throw in `app/page.tsx` (outside its own inline catch) triggers the new root boundary — screenshot confirmed dark-theme styling with the Navbar intact above it — and clicking "Try again" after reverting the throw recovers the dashboard via `reset()`; spot-checked the games empty-search message and the `/admin/genres` logged-out redirect. All temporary test edits were reverted (`git diff` clean before committing). `npm run lint`, `npx tsc --noEmit`, `npm run build`, and `npm test` (143/143, unchanged — no new unit-testable logic) all pass.
 
 - **2026-08-24** — Games CRUD: wired real create/edit/delete into `/consoles/[consoleId]/games`, replacing the `GameFormDialog` no-op stub. Reviewed the existing spec (`12-games-crud.md`) against `screenshots/form-game-1.png`/`form-game-2.png` before implementing and found the built form had drifted from the reference design in several real ways, not just "needs a submit handler": added an editable **Console** field (`select` of every console via new `getAllConsoles()` in `lib/consoles.ts`, defaults to the route's/game's current console, reassignable — same pattern as `11-consoles-crud.md`'s Brand reassignment, with the game disappearing from the current page's list immediately on reassignment); switched **Year** from free-text to a descending 1985→current-year `select`; added character limits (Title 80, Developer/Publisher 50 each, Notes 200, each saga tag 50); restyled **Genre(s)** from a checkbox-list-in-a-box to a select-dropdown + removable chips; added a new **Sagas/Tags** field (text input + "Add" button, chips with an inline "x", case-insensitive de-dupe client-side) mapped to the existing `Game.saga` `Json?` column as `string[]`; and dropped the **Owned/Wishlist** toggle entirely (`isWishlist`/`GameStatus.WISHLIST` out of scope for v1 per this review), which resolved the form-to-`GameStatus` mapping ambiguity flagged in the original spec down to one unconditional precedence rule (`isFinished` → `COMPLETED`, else `isPlaying` → `PLAYING`, else `isBacklog` → `BACKLOG`, else `OWNED`). Rating stayed unchanged (1–10 number input) despite not appearing in either screenshot, since nothing called for removing it. Reflected the `saga`/`isWishlist` scope changes back into `project-overview.md` (non-goals, §8.4, open questions #2/#5) and `ROADMAP.md`. Added `lib/game-utils.ts` (no Prisma import, mirrors `lib/brand-utils.ts`/`lib/console-utils.ts`) holding the zod schemas, `getGameYearOptions`, `sortGames`, `GameListItem`/`GameSortKey`, and the status/media-status mapping helpers — moving `sortGames` here (not just adding new logic) was required mid-implementation after `npm run build` hit the exact Turbopack "client bundle pulls in the Postgres driver" failure seen during `09-admin-genres.md`, this time via `GamesList.tsx`'s runtime import of `sortGames` from `lib/games.ts`. Extended `lib/games.ts` with `createGame`/`updateGame`/`deleteGame` and an expanded `GameListItem` carrying every editable field (previously card-display-only); `saga` writes use `Prisma.DbNull` rather than plain `null` since the generated Prisma client's nullable-`Json` update type rejects a bare `null`. `updateGame`'s genre-join replacement (`gameGenre.deleteMany` + nested `create`) runs inside a `db.$transaction`. Restructured `GamesList.tsx` to own the page header (title/count/"+ Add Game", moved out of `page.tsx`, mirroring `ConsolesGrid.tsx`'s precedent) plus add/edit/delete/reassign state, and nested `GamesControls` inside it so visual order (header → controls → list) stayed correct after the move. Added `lib/game-utils.test.ts` (44 tests) covering the new schemas/mapping helpers; `lib/games.test.ts`'s `game()` test fixture was extended for `GameListItem`'s new required fields. Verified against the real dev DB via a Playwright driver script covering login, logged-out (no Add/Edit/Delete controls), add (all fields including genre chips and a saga tag), edit with a console reassignment (game disappears from the old console's list and header count, appears on the new console's page), and delete (DB confirmed restored to its original per-console game counts, zero leftover rows) — plus `npm run lint`, `npx tsc --noEmit`, `npm run build`, and `npm test` (143/143 passing, up from 99).
 
