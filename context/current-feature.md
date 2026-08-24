@@ -1,68 +1,22 @@
-# Current Feature: Games CRUD
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Logged-in users can add a game via "+ Add Game", which now actually persists
-  (previously a no-op), defaulting to the current console but able to target any
-  console via the new Console field
-- Logged-in users can edit any of a game's fields (title, console, genres, media/
-  playable status, year, rating, developer, publisher, notes, sagas) from its card
-- Logged-in users can delete a game from its card, gated behind a confirmation modal
-- The `GameFormValues` ↔ Prisma mapping (status precedence, media-status booleans,
-  saga array) is implemented consistently for create and edit, and covered by unit
-  tests
-- Title/Developer/Publisher/Notes/each saga tag enforce their character limits
-  client-side (`maxLength`) and server-side (zod)
-- Year is a descending select (current year → 1985), not free text
-- The form has no control that can set `isWishlist`/`GameStatus.WISHLIST`
-- Logged-out users see no edit/delete controls anywhere on the page
-- Server Actions re-verify `auth()` independently of the page-level session check
-- Changes are visible immediately without a manual refresh
-- `npm run build`, `npm run lint`, and `npm test` pass
+<!-- What does success look like? -->
 
 ## Notes
 
-Full spec: `context/feature/12-games-crud.md` (reviewed/refined 2026-08-24 against
-`screenshots/form-game-1.png`/`form-game-2.png`).
-
-Field changes vs. the currently-built `GameFormDialog`:
-- **Console**: new field, editable `select` of every console (`getAllConsoles()` in
-  `lib/consoles.ts`), defaults to the current route's console (create) or the game's
-  current console (edit). Editable/reassignable — same pattern as
-  `11-consoles-crud.md`'s Brand reassignment; a reassigned game disappears from the
-  current page's `GamesList` state immediately.
-- **Title**: add 80-char max. **Developer**/**Publisher**: 50-char max each.
-  **Notes**: 200-char max. All client `maxLength` + server zod.
-- **Year**: free-text 4-digit input → `select`, 1985 → current year, descending
-  (newest first) — mirrors `getConsoleYearOptions`.
-- **Genre(s)**: restyle from checkbox-list-in-a-box to select-dropdown + removable
-  chips, matching the screenshot. Still `genreIds: string[]`, still required.
-- **Sagas/Tags**: new field — text input + "Add" button, chips with an inline "x".
-  Each tag ≤50 chars, trimmed, non-empty, case-insensitive de-dupe client-side. Maps
-  to the existing `Game.saga` `Json?` column as `string[]` (`null` when empty).
-- **Rating**: unchanged (1–10 number input) — not in the screenshots but nothing
-  calls for removing it.
-- **Wishlist removed**: the "Owned/Wishlist" `RadioGroup` (`ownedStatus`) is dropped
-  entirely; media/playable status sections are no longer conditionally rendered.
-  Resolves the old status-mapping ambiguity — precedence collapses to one
-  unconditional rule: `isFinished` → `COMPLETED`, else `isPlaying` → `PLAYING`, else
-  `isBacklog` → `BACKLOG`, else → `OWNED`. Never write `isWishlist`.
-
-New file `lib/game-utils.ts` (no Prisma import) needed for zod schemas +
-`getGameYearOptions()` used client-side — same Turbopack client-bundle concern that
-broke the build once already during `09-admin-genres.md`; don't import these from
-`lib/games.ts` directly in a client component.
-
-`saga`/`isWishlist` scope changes were also reflected back into `project-overview.md`
-(non-goals, §8.4, open questions #2/#5) and `ROADMAP.md`.
+<!-- Additional context, constraints, or details from spec -->
 
 ## History
 
 <!-- Keep this updated. Earliest to Latest -->
+
+- **2026-08-24** — Games CRUD: wired real create/edit/delete into `/consoles/[consoleId]/games`, replacing the `GameFormDialog` no-op stub. Reviewed the existing spec (`12-games-crud.md`) against `screenshots/form-game-1.png`/`form-game-2.png` before implementing and found the built form had drifted from the reference design in several real ways, not just "needs a submit handler": added an editable **Console** field (`select` of every console via new `getAllConsoles()` in `lib/consoles.ts`, defaults to the route's/game's current console, reassignable — same pattern as `11-consoles-crud.md`'s Brand reassignment, with the game disappearing from the current page's list immediately on reassignment); switched **Year** from free-text to a descending 1985→current-year `select`; added character limits (Title 80, Developer/Publisher 50 each, Notes 200, each saga tag 50); restyled **Genre(s)** from a checkbox-list-in-a-box to a select-dropdown + removable chips; added a new **Sagas/Tags** field (text input + "Add" button, chips with an inline "x", case-insensitive de-dupe client-side) mapped to the existing `Game.saga` `Json?` column as `string[]`; and dropped the **Owned/Wishlist** toggle entirely (`isWishlist`/`GameStatus.WISHLIST` out of scope for v1 per this review), which resolved the form-to-`GameStatus` mapping ambiguity flagged in the original spec down to one unconditional precedence rule (`isFinished` → `COMPLETED`, else `isPlaying` → `PLAYING`, else `isBacklog` → `BACKLOG`, else `OWNED`). Rating stayed unchanged (1–10 number input) despite not appearing in either screenshot, since nothing called for removing it. Reflected the `saga`/`isWishlist` scope changes back into `project-overview.md` (non-goals, §8.4, open questions #2/#5) and `ROADMAP.md`. Added `lib/game-utils.ts` (no Prisma import, mirrors `lib/brand-utils.ts`/`lib/console-utils.ts`) holding the zod schemas, `getGameYearOptions`, `sortGames`, `GameListItem`/`GameSortKey`, and the status/media-status mapping helpers — moving `sortGames` here (not just adding new logic) was required mid-implementation after `npm run build` hit the exact Turbopack "client bundle pulls in the Postgres driver" failure seen during `09-admin-genres.md`, this time via `GamesList.tsx`'s runtime import of `sortGames` from `lib/games.ts`. Extended `lib/games.ts` with `createGame`/`updateGame`/`deleteGame` and an expanded `GameListItem` carrying every editable field (previously card-display-only); `saga` writes use `Prisma.DbNull` rather than plain `null` since the generated Prisma client's nullable-`Json` update type rejects a bare `null`. `updateGame`'s genre-join replacement (`gameGenre.deleteMany` + nested `create`) runs inside a `db.$transaction`. Restructured `GamesList.tsx` to own the page header (title/count/"+ Add Game", moved out of `page.tsx`, mirroring `ConsolesGrid.tsx`'s precedent) plus add/edit/delete/reassign state, and nested `GamesControls` inside it so visual order (header → controls → list) stayed correct after the move. Added `lib/game-utils.test.ts` (44 tests) covering the new schemas/mapping helpers; `lib/games.test.ts`'s `game()` test fixture was extended for `GameListItem`'s new required fields. Verified against the real dev DB via a Playwright driver script covering login, logged-out (no Add/Edit/Delete controls), add (all fields including genre chips and a saga tag), edit with a console reassignment (game disappears from the old console's list and header count, appears on the new console's page), and delete (DB confirmed restored to its original per-console game counts, zero leftover rows) — plus `npm run lint`, `npx tsc --noEmit`, `npm run build`, and `npm test` (143/143 passing, up from 99).
 
 - **2026-08-21** — Brands CRUD: wired real create/edit/delete into `/brands`, replacing the `AddBrandDialog` no-op stub. Renamed/generalized it to `components/brands/BrandFormDialog.tsx` accepting an optional `brand` prop (mirrors `GameFormDialog`'s `game?:` pattern), handling both Add and Edit. Restructured `BrandCard.tsx` from a single card-wide `<Link>` into an outer `<div>` with an inner `<Link>` around the name/count plus sibling edit/delete icon buttons (top-right, visible only when logged in) — since the icons are siblings rather than descendants of the `Link`, no `preventDefault`/`stopPropagation` was needed. Added `components/brands/BrandsGrid.tsx`, a client component that owns the brand list as local state (mirroring `GenresTable.tsx`'s pattern) so add/edit/delete update the grid immediately without a router refresh; `app/brands/page.tsx` now just fetches data and hands off to it. Extended `lib/brands.ts` with `createBrand`/`updateBrand`/`deleteBrand`, and split pure logic (`brandNameSchema` ≤30 chars, `brandOriginSchema` ≤30 chars optional, `sortBrandsByName`, `toBrandErrorMessage`) into `lib/brand-utils.ts` with no Prisma import, following the exact precedent set by `lib/genre-utils.ts` in the prior genres feature (same Turbopack client-bundle concern). Added `app/brands/actions.ts` (`createBrandAction`/`updateBrandAction`/`deleteBrandAction`), each independently re-checking `auth()`. **Resolved an internal contradiction in the spec before implementing:** cascade deletes are blocked rather than allowed — `deleteBrand` rejects deletion when a brand still has 1+ consoles, and the delete confirmation `alert-dialog` shows a "Can't delete "X" — it still has N console(s)" message with only a Close action (no destructive button) in that case, falling back to a normal Cancel/Delete confirmation when `consoleCount` is 0. Added `lib/brand-utils.test.ts` (20 tests) covering the extracted pure logic; `lib/brands.ts`'s Prisma-backed CRUD functions and `app/brands/actions.ts`'s Server Actions were intentionally left untested, matching the same "skip thin DB passthroughs" precedent as `lib/genres.ts`/`app/admin/genres/actions.ts`. Verified against the real dev DB via a Playwright driver script (`chromium-cli` wasn't available in this environment, so used `playwright` directly instead) covering login, add, edit, blocked-delete (brand with consoles), successful delete (brand with none, DB restored to its original 7-brand state afterward), and confirmed zero edit/delete controls render for a logged-out session — plus `npm run lint`, `npx tsc --noEmit`, `npm run build`, and `npm test` (71/71 passing, up from 53).
 
