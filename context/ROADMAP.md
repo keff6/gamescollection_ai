@@ -120,8 +120,10 @@ behind a confirmation modal; changes show up immediately on the Phase 1 public p
 - Auth will use NextAuth v5 Credentials provider — the schema already has the
   `Account`/`Session`/`VerificationToken` models scaffolded for it, so Phase 2 is
   lighter than initially assumed (no custom session/cookie code needed).
-- `saga` (Json field) and cover-image upload are explicitly out of scope for now —
-  no UI in the screenshots references them yet.
+- Cover-image upload is explicitly out of scope for now — no UI in the screenshots
+  references it yet. `saga` (Json field) was originally deferred for the same reason
+  but is now in scope for `12-games-crud.md` (tag-style UI, stored as `string[]`) per
+  its 2026-08-24 spec review.
 
 ## Still open (small decisions, called out in individual specs)
 

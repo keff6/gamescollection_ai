@@ -2,7 +2,7 @@
 
 **Status:** Draft
 **Owner:** (you)
-**Last updated:** 2026-08-21
+**Last updated:** 2026-08-24
 
 ---
 
@@ -35,8 +35,9 @@ browsable, self-hosted catalog.
   is not part of v1's UI (may be pasted-URL only, or deferred entirely)
 - Barcode scanning, third-party catalog import (e.g. IGDB/MobyGames sync), or price
   tracking/valuation
-- The `saga` field's use case (game series grouping) — present in the schema, no
-  UI defined for it yet
+- `isWishlist` / `GameStatus.WISHLIST` — the enum value and boolean column stay in
+  the schema, but the Add/Edit Game form (`12-games-crud.md`) has no control that can
+  set either; may be revisited in a later phase
 - Mobile native app — responsive web only
 - Automated tests / CI — no test runner is configured yet per `CLAUDE.md`; add later
   if desired, not required for v1
@@ -107,8 +108,9 @@ security boundary against the internet at large.
     single-field (`name`) entity best managed as a simple editable table rather than a
     modal-per-row: existing genres are edited inline in the table, "Add" appends a new
     inline row to fill in, and each row gets a "Delete" action with a confirmation modal.
-- Game create/edit reuses the Add Game modal (title, genre(s), status, year, rating,
-  developer, publisher, notes)
+- Game create/edit reuses the Add Game modal (title, console, genre(s), status, year,
+  rating, developer, publisher, notes, sagas/tags) — see `12-games-crud.md` for the
+  exact field list, limits, and the Console field's reassignment behavior
 - Deleting a Brand cascades to its Consoles and their Games (already enforced at the DB
   level via `onDelete: Cascade`) — UI must confirm this destructive action before it fires
 - All Add/Edit/Delete controls (on the browse pages and on `/admin/genres`) are visible
@@ -160,14 +162,17 @@ Carried over from spec review — resolve before or during implementation:
 
 1. ~~Keep `Game`'s 7 status booleans, or migrate to a single `status` enum?~~ Resolved —
    migrated, see `specs/00-schema-review.md`.
-2. Genre field on the Add Game form: single-select or multi-select? (game cards display
-   multiple genres, so schema supports many-to-many already)
+2. ~~Genre field on the Add Game form: single-select or multi-select?~~ Resolved —
+   multi-select (dropdown + removable chips), see `12-games-crud.md`.
 3. ~~Are "Add Brand/Console/Game" buttons hidden for logged-out users, or shown but
    redirect to login?~~ Resolved — hidden for logged-out users, matching the existing
    `isLoggedIn`-gated stub already in place on the brands/consoles/games pages.
 4. What does the "4 / 23" Brands/Consoles dashboard stat actually mean (brands *with
    games* vs. total brands)?
-5. What is the `saga` field for, and does it need UI in v1 or a later phase?
+5. ~~What is the `saga` field for, and does it need UI in v1 or a later phase?~~
+   Resolved — tag-style labels (game series/collection grouping), in scope for v1,
+   stored as `string[]` in the existing `saga Json?` column. UI defined in
+   `12-games-crud.md`.
 6. Deployment target — Vercel.
 
 ## 13. Milestones
@@ -188,5 +193,6 @@ See `ROADMAP.md` for the full phased task breakdown. Summary:
 - `ROADMAP.md` — phased task breakdown
 - `SPEC_TEMPLATE.md` — phased task breakdown
 - `specs/*.md` — per-feature implementation specs
-- Screenshots: `dashboard.png`, `brands.png`, `consoles.png`,
-  `games.png`, `forms.png`
+- Screenshots: `dashboard.png`, `brands.png`, `consoles.png`, `games.png` — the
+  Add/Edit Game modal's reference is `form-game-1.png`/`form-game-2.png` (superseding
+  `forms.png`)

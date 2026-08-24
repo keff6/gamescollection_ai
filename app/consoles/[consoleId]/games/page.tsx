@@ -1,9 +1,8 @@
 import { notFound } from "next/navigation";
 import { auth } from "@/auth";
 import { Breadcrumb } from "@/components/layout/Breadcrumb";
-import { GameFormDialog } from "@/components/games/GameFormDialog";
-import { GamesControls } from "@/components/games/GamesControls";
 import { GamesList } from "@/components/games/GamesList";
+import { getAllConsoles } from "@/lib/consoles";
 import { GAMES_PAGE_SIZE, getConsoleGames, type GameSortKey } from "@/lib/games";
 import { getAllGenres } from "@/lib/genres";
 
@@ -48,6 +47,7 @@ export default async function ConsoleGamesPage({
   if (!data) notFound();
 
   const { console: consoleInfo, totalGames, total, games } = data;
+  const consoles = isLoggedIn ? await getAllConsoles() : [];
 
   return (
     <div className="flex flex-col gap-8">
@@ -59,25 +59,17 @@ export default async function ConsoleGamesPage({
         ]}
       />
 
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">{consoleInfo.name}</h1>
-          <p className="mt-1 text-muted-foreground">
-            {totalGames} game{totalGames === 1 ? "" : "s"}
-          </p>
-        </div>
-        {isLoggedIn && <GameFormDialog genres={genres} />}
-      </div>
-
-      <GamesControls key={search} search={search} sort={sort} />
-
       <GamesList
         key={`${search}-${sort}`}
         consoleId={consoleId}
+        consoleName={consoleInfo.name}
+        consoles={consoles}
+        genres={genres}
         search={search}
         sort={sort}
         initialGames={games}
         initialTotal={total}
+        initialTotalGames={totalGames}
         isLoggedIn={isLoggedIn}
       />
     </div>

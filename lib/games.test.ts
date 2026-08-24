@@ -5,11 +5,21 @@ function game(overrides: Partial<GameListItem>): GameListItem {
   return {
     id: overrides.id ?? "id",
     title: "Untitled",
+    consoleId: "console-1",
     year: null,
     rating: null,
     developer: null,
     publisher: null,
+    notes: null,
+    saga: [],
+    genreIds: [],
     genres: [],
+    isNew: false,
+    isComplete: false,
+    isDigital: false,
+    isBacklog: false,
+    isPlaying: false,
+    isFinished: false,
     ...overrides,
   };
 }

@@ -1,16 +1,64 @@
-# Current Feature
+# Current Feature: Games CRUD
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- What does success look like? -->
+- Logged-in users can add a game via "+ Add Game", which now actually persists
+  (previously a no-op), defaulting to the current console but able to target any
+  console via the new Console field
+- Logged-in users can edit any of a game's fields (title, console, genres, media/
+  playable status, year, rating, developer, publisher, notes, sagas) from its card
+- Logged-in users can delete a game from its card, gated behind a confirmation modal
+- The `GameFormValues` ↔ Prisma mapping (status precedence, media-status booleans,
+  saga array) is implemented consistently for create and edit, and covered by unit
+  tests
+- Title/Developer/Publisher/Notes/each saga tag enforce their character limits
+  client-side (`maxLength`) and server-side (zod)
+- Year is a descending select (current year → 1985), not free text
+- The form has no control that can set `isWishlist`/`GameStatus.WISHLIST`
+- Logged-out users see no edit/delete controls anywhere on the page
+- Server Actions re-verify `auth()` independently of the page-level session check
+- Changes are visible immediately without a manual refresh
+- `npm run build`, `npm run lint`, and `npm test` pass
 
 ## Notes
 
-<!-- Additional context, constraints, or details from spec -->
+Full spec: `context/feature/12-games-crud.md` (reviewed/refined 2026-08-24 against
+`screenshots/form-game-1.png`/`form-game-2.png`).
+
+Field changes vs. the currently-built `GameFormDialog`:
+- **Console**: new field, editable `select` of every console (`getAllConsoles()` in
+  `lib/consoles.ts`), defaults to the current route's console (create) or the game's
+  current console (edit). Editable/reassignable — same pattern as
+  `11-consoles-crud.md`'s Brand reassignment; a reassigned game disappears from the
+  current page's `GamesList` state immediately.
+- **Title**: add 80-char max. **Developer**/**Publisher**: 50-char max each.
+  **Notes**: 200-char max. All client `maxLength` + server zod.
+- **Year**: free-text 4-digit input → `select`, 1985 → current year, descending
+  (newest first) — mirrors `getConsoleYearOptions`.
+- **Genre(s)**: restyle from checkbox-list-in-a-box to select-dropdown + removable
+  chips, matching the screenshot. Still `genreIds: string[]`, still required.
+- **Sagas/Tags**: new field — text input + "Add" button, chips with an inline "x".
+  Each tag ≤50 chars, trimmed, non-empty, case-insensitive de-dupe client-side. Maps
+  to the existing `Game.saga` `Json?` column as `string[]` (`null` when empty).
+- **Rating**: unchanged (1–10 number input) — not in the screenshots but nothing
+  calls for removing it.
+- **Wishlist removed**: the "Owned/Wishlist" `RadioGroup` (`ownedStatus`) is dropped
+  entirely; media/playable status sections are no longer conditionally rendered.
+  Resolves the old status-mapping ambiguity — precedence collapses to one
+  unconditional rule: `isFinished` → `COMPLETED`, else `isPlaying` → `PLAYING`, else
+  `isBacklog` → `BACKLOG`, else → `OWNED`. Never write `isWishlist`.
+
+New file `lib/game-utils.ts` (no Prisma import) needed for zod schemas +
+`getGameYearOptions()` used client-side — same Turbopack client-bundle concern that
+broke the build once already during `09-admin-genres.md`; don't import these from
+`lib/games.ts` directly in a client component.
+
+`saga`/`isWishlist` scope changes were also reflected back into `project-overview.md`
+(non-goals, §8.4, open questions #2/#5) and `ROADMAP.md`.
 
 ## History
 

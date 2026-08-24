@@ -16,6 +16,25 @@ export interface BrandConsolesData {
   consoles: ConsoleWithGameCount[];
 }
 
+export interface ConsoleOptionListItem {
+  id: string;
+  name: string;
+  brandName: string;
+}
+
+export async function getAllConsoles(): Promise<ConsoleOptionListItem[]> {
+  const consoles = await db.console.findMany({
+    select: { id: true, name: true, brand: { select: { name: true } } },
+    orderBy: [{ brand: { name: "asc" } }, { name: "asc" }],
+  });
+
+  return consoles.map((consoleItem) => ({
+    id: consoleItem.id,
+    name: consoleItem.name,
+    brandName: consoleItem.brand.name,
+  }));
+}
+
 function toConsoleWithGameCount(consoleItem: {
   id: string;
   name: string;
