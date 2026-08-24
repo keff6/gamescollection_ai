@@ -105,9 +105,14 @@ export function GamesList({
 
   function handleShowMore() {
     startTransition(async () => {
-      const next = await loadMoreGames(consoleId, search, sort, games.length);
-      setGames((current) => [...current, ...next.games]);
-      setTotal(next.total);
+      try {
+        const next = await loadMoreGames(consoleId, search, sort, games.length);
+        setGames((current) => [...current, ...next.games]);
+        setTotal(next.total);
+      } catch (error) {
+        console.error("Failed to load more games:", error);
+        toast.error("Couldn't load more games. Try again.");
+      }
     });
   }
 

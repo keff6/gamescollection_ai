@@ -1,16 +1,52 @@
-# Current Feature
+# Current Feature: Empty / Loading / Error States Audit
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- What does success look like? -->
+- Add `app/error.tsx` — a root Client Component error boundary styled to match
+  `app/page.tsx`'s existing inline "Dashboard unavailable" fallback, with a
+  "Try again" button calling the `reset()` prop Next.js passes in
+- Fix `components/games/GamesList.tsx`'s `loadMoreGames` call (~line 108,
+  pagination "Show More") to wrap the Server Action call in `try`/`catch`,
+  matching the `toast.error` pattern already used by add/edit/delete — on
+  failure, leave the already-loaded games in place (no partial state change)
+- Full read-only audit pass confirming existing loading/empty/error states
+  across five prior features are still correct and consistent:
+  - Loading: `app/loading.tsx`, `app/brands/loading.tsx`,
+    `app/admin/genres/loading.tsx`, `app/brands/[brandId]/consoles/loading.tsx`,
+    `app/consoles/[consoleId]/games/loading.tsx` — each should render a
+    layout-matching skeleton, not a generic spinner
+  - Empty states: `BrandsGrid` ("No brands yet"), `ConsolesGrid` (zero-total vs.
+    zero-after-filter), `GamesList` ("No games yet" vs. "No games match your
+    search"), `GenresTable` ("No genres yet")
+  - Initial-fetch error: the four inline `try`/`catch` fallbacks in
+    `app/page.tsx`, `app/brands/page.tsx`,
+    `app/brands/[brandId]/consoles/page.tsx`,
+    `app/consoles/[consoleId]/games/page.tsx` still `console.error` + render a
+    styled fallback (not raw-thrown)
+  - Mutation error: `BrandFormDialog`, `ConsoleFormDialog`, `GameFormDialog`,
+    `GenresTable`'s add/edit/delete all still surface failures via
+    `toast.error` without closing the dialog or discarding input
+- Any drift found during the audit gets fixed now, not deferred
+- `npm run build`, `npm run lint`, and `npm test` pass
 
 ## Notes
 
-<!-- Additional context, constraints, or details from spec -->
+- This is an audit, not a from-scratch build — most states already exist from
+  Phase 1 pages and Phase 3 CRUD work.
+- Out of scope: any new loading/empty/error *design* (reuse existing visual
+  language exactly), retry/offline handling beyond `error.tsx`'s built-in
+  `reset()`, redesigning `app/admin/genres/page.tsx`'s existing inline
+  try/catch (just verify it's still consistent).
+- Considered per-route `error.tsx` files instead of one root one, but rejected:
+  the four data-fetching pages already self-catch and never rethrow, so a
+  route-level boundary would be redundant. One root `app/error.tsx` covers the
+  actual gap (client-side/mutation-time throws bypassing those inline catches).
+  Revisit if a future page's data-fetching pattern doesn't self-catch.
+- Spec file: `context/feature/14-empty-loading-error-states.md`
 
 ## History
 
