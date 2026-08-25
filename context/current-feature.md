@@ -1,44 +1,75 @@
-# Current Feature: UI Contrast, Modal & Responsiveness Fixes
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-Fix UI issues found by a live (Playwright-driven) UI review focused on modal
-appearance, responsiveness, and color/contrast:
-
-1. Modal backdrop overlay is nearly invisible (`bg-black/10` in both
-   `components/ui/dialog.tsx` and `components/ui/alert-dialog.tsx`) — background
-   content stays fully readable behind every modal, including the destructive
-   delete-confirmation dialog. Raise opacity to a normal level (e.g. `/50`).
-2. Card/input border contrast fails WCAG (`--border` computed ~1.21:1 against
-   `--card` in `app/globals.css`, needs 3:1 for UI components) — cards and
-   unfocused inputs visually blend into the background.
-3. `SagaTagInput` (`components/games/SagaTagInput.tsx`)'s `grid-cols-2` layout
-   has no responsive breakpoint — at 375px the tag input's placeholder text is
-   truncated and the row forces horizontal scroll on the whole Game modal.
-4. All three form dialogs (`BrandFormDialog.tsx`, `ConsoleFormDialog.tsx`,
-   `GameFormDialog.tsx`) share an identical `overflow-y-auto` scroll container
-   with no `overflow-x-hidden` — browsers auto-compute `overflow-x: auto` in
-   that case, so even a short 2-field form (Add Brand) shows phantom vertical
-   *and* horizontal scrollbars.
-5. Edit/Delete icon buttons on Brand/Console/Game cards are 28×28px with only
-   4px gap between them — clears the 24px WCAG minimum but is tight for a
-   destructive action sitting next to an edit action; bump touch target size.
+<!-- What does success look like? -->
 
 ## Notes
 
-- Found via a live UI-reviewer pass (Playwright MCP) against the real dev
-  server, not just static code reading — confirmed with actual computed
-  styles/contrast ratios and screenshots at desktop/mobile widths.
-- Item 6 (delete button text ~4.7:1 marginal-pass contrast) was flagged but
-  needs no fix now — noted only in case the palette shifts later.
+<!-- Additional context, constraints, or details from spec -->
 
 ## History
 
 <!-- Keep this updated. Earliest to Latest -->
+
+- **2026-08-25** — UI Contrast, Modal & Responsiveness Fixes: fixed 5 issues found
+  by a live Playwright-driven UI review (not just static code reading — computed
+  actual contrast ratios and screenshotted desktop/mobile states against the real
+  dev server). (1) Modal backdrop was `bg-black/10` in both `components/ui/dialog.tsx`
+  and `components/ui/alert-dialog.tsx` — confirmed live that background content
+  (game cards, text) stayed fully readable through every modal, most concerning on
+  the destructive delete-confirmation dialog; raised to `bg-black/50`. (2) Card/input
+  border computed to ~1.21:1 contrast against `--card` (`app/globals.css`'s
+  `--border`/`--input` were `#1f2937`), well under WCAG's 3:1 UI-component minimum
+  — changed to `#64748b` (Tailwind slate-500, consistent with the rest of the
+  palette's slate steps), giving ~3.7-4.1:1. Separately, cards/dialogs/dropdowns/
+  selects/filter-tabs all shared one `ring-1 ring-foreground/10` convention (~1.3:1,
+  same problem) — asked the user how far to take this since it's a visible
+  app-wide style change, not just a targeted bug fix; user chose the full 3:1 fix,
+  so all 16 occurrences became `ring-foreground/30` (~3.7:1) via a single sed pass
+  across `components/`. (3) `SagaTagInput.tsx` and two `grid-cols-2` rows in
+  `ConsoleFormDialog.tsx`/`GameFormDialog.tsx` (Console/Year, Developer/Publisher)
+  had no responsive breakpoint — confirmed live at 375px that the saga-tag input's
+  placeholder was truncated and the row forced horizontal scroll; changed to
+  `grid-cols-1 sm:grid-cols-2`. (4) All three form dialogs shared an identical
+  `overflow-y-auto` scroll container with no explicit `overflow-x`, so browsers
+  auto-compute `overflow-x: auto` — fixed by adding `overflow-x-hidden`. While
+  verifying that fix live, found the real root cause of a related bug: even a
+  short 2-field form (Add Brand) still showed a phantom *vertical* scrollbar,
+  traced via `scrollHeight`/`clientHeight` inspection to `DialogFooter`'s
+  `-mx-4 -mb-4` full-bleed trick (flushes the footer against the dialog's rounded
+  corners) — that negative margin computes as genuine scrollable overflow when the
+  footer sits inside an `overflow-y-auto` ancestor, even though nothing is actually
+  cut off. Fixed by restructuring all three dialogs so the scrollable region wraps
+  only the fields (inner `<div>`), with `<DialogFooter>` as a non-scrolling sibling
+  after it, still inside `<form>` — this also means Cancel/Save now stays visible
+  without scrolling to the bottom, even on the ~10-field Game modal at mobile
+  height (previously flagged as a nice-to-have in the Responsive Pass entry above,
+  now resolved as a side effect). (5) Edit/Delete icon buttons on Brand/Console/Game
+  cards were `size="icon-sm"` (28×28px) with `gap-1` (4px) — bumped to `size="icon"`
+  (32×32px) with `gap-2` (8px) for more separation next to a destructive action;
+  left `GenresTable.tsx`'s lone delete button and `DialogContent`'s own close-X
+  untouched since neither has the adjacent-destructive-action mis-tap risk this
+  targeted. Also added a touch target + focus-ring fix to the genre-chip and
+  saga-tag "×" remove buttons (`GenrePicker.tsx`, `SagaTagInput.tsx`) via
+  `-m-1 p-1 focus-visible:ring-2 focus-visible:ring-accent`, matching the app's
+  existing focus convention. Ran `npx prettier --write` on the three dialog files
+  after restructuring since the extra nesting level shifted line-wrap points
+  throughout (confirmed via `git diff -w` that every non-trivial diff line was pure
+  re-wrapping, no logic changes). One item from the review was deliberately left
+  unfixed: delete-button text contrast (~4.7:1, marginal-pass) — noted only in case
+  the palette shifts later. `npm test` couldn't run in this session (pre-existing
+  environment issue, unrelated to these changes — this shell's Node is 20.11.1,
+  short of the `.nvmrc`-pinned 25.6.1 Vitest requires); `npx tsc --noEmit`,
+  `npm run lint`, and `npm run build` all pass. Verified live via Playwright
+  against the real dev DB: Brands page/modal and delete-confirmation at desktop,
+  Game modal's full field list at 375px (Console/Year and Saga/Tags rows now stack
+  and read cleanly, no overflow), and computed-style checks confirming the scroll
+  container's `scrollHeight === clientHeight` post-fix.
 
 - **2026-08-25** — Add Footer: added a site-wide `Footer` (`components/layout/Footer.tsx`),
   mounted in `app/layout.tsx` below `<main>` alongside the Navbar so it renders on every
