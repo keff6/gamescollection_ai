@@ -2,6 +2,8 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { db } from "@/lib/prisma";
 import { verifyCredentials } from "@/lib/verify-credentials";
+import { checkLockout, recordFailedAttempt, resetAttempts } from "@/lib/login-rate-limit";
+import { LoginLockedError } from "@/lib/login-locked-error";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   session: { strategy: "jwt" },
@@ -19,8 +21,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           return null;
         }
 
+        const lockout = await checkLockout(email);
+        if (lockout.locked) {
+          throw new LoginLockedError(lockout.retryAfterMs);
+        }
+
         const user = await db.user.findUnique({ where: { email } });
-        return verifyCredentials(user, password);
+        const verified = await verifyCredentials(user, password);
+
+        if (!verified) {
+          await recordFailedAttempt(email);
+          return null;
+        }
+
+        await resetAttempts(email);
+        return verified;
       },
     }),
   ],

@@ -2,15 +2,27 @@
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- What does success look like? -->
+Add rate limiting to the login flow to prevent credential brute-forcing.
+Scope: login only (the 9 write Server Actions already require an
+authenticated session, so they're out of scope). Storage: Postgres via the
+existing Neon/Prisma setup (no new infra) — Vercel serverless functions don't
+share in-memory state across invocations, so a real backend is required.
 
 ## Notes
 
-<!-- Additional context, constraints, or details from spec -->
+- New `LoginAttempt` Prisma model (migration `add_login_attempt`), tracked by
+  normalized (trimmed/lowercased) attempted email, independent of whether the
+  email matches a real `User` row.
+- Fixed window: 5 failed attempts / 15-minute window → 15-minute lockout.
+  Lockout check happens before the DB user lookup / bcrypt compare.
+- Distinct lockout message on the client via NextAuth v5's
+  `CredentialsSignin.code` field (verified against `@auth/core` source —
+  sanctioned mechanism, not a hack).
+- Full plan: `/home/kevin/.claude/plans/i-want-to-add-humble-rabbit.md`
 
 ## History
 

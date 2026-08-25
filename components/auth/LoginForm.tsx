@@ -32,7 +32,11 @@ export function LoginForm() {
     if (result?.error) {
       setIsPending(false);
       setPassword("");
-      setError("Invalid email or password");
+      setError(
+        result.code === "login_locked"
+          ? "Too many failed attempts. Try again in a few minutes."
+          : "Invalid email or password"
+      );
       return;
     }
 
@@ -59,6 +63,7 @@ export function LoginForm() {
           type="email"
           autoComplete="email"
           required
+          maxLength={40}
           value={email}
           onChange={(event) => setEmail(event.target.value)}
         />
@@ -72,6 +77,7 @@ export function LoginForm() {
           type="password"
           autoComplete="current-password"
           required
+          maxLength={40}
           value={password}
           onChange={(event) => setPassword(event.target.value)}
         />

@@ -105,6 +105,18 @@ model User {
   @@map("user")
 }
 
+model LoginAttempt {
+  id            String    @id @default(uuid())
+  identifier    String    @unique
+  failedCount   Int       @default(0) @map("failed_count")
+  firstFailedAt DateTime? @map("first_failed_at")
+  lockedUntil   DateTime? @map("locked_until")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  createdAt     DateTime  @default(now()) @map("created_at")
+
+  @@map("login_attempt")
+}
+
 // NextAuth v5 models
 
 model Account {
