@@ -27,7 +27,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CONSOLE_GENERATIONS, getConsoleYearOptions } from "@/lib/console-utils";
+import {
+  CONSOLE_GENERATIONS,
+  consoleFormSchema,
+  getConsoleYearOptions,
+} from "@/lib/console-utils";
 import type { ConsoleWithGameCount } from "@/lib/consoles";
 
 export interface ConsoleFormValues {
@@ -85,16 +89,9 @@ export function ConsoleFormDialog({
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!values.name.trim()) {
-      setError("Name is required.");
-      return;
-    }
-    if (!values.shortName.trim()) {
-      setError("Short name is required.");
-      return;
-    }
-    if (!values.brandId) {
-      setError("Brand is required.");
+    const validation = consoleFormSchema.safeParse(values);
+    if (!validation.success) {
+      setError(validation.error.issues[0].message);
       return;
     }
 

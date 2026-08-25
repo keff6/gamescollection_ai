@@ -75,6 +75,15 @@ export const consoleGenerationSchema = z
   .optional()
   .transform((value) => (value ? value : undefined));
 
+export const consoleFormSchema = z.object({
+  name: consoleNameSchema,
+  shortName: consoleShortNameSchema,
+  brandId: consoleBrandIdSchema,
+  year: consoleYearSchema,
+  generation: consoleGenerationSchema,
+  isPortable: z.boolean(),
+});
+
 export function sortConsolesByYear<T extends { year: string | null }>(
   consoles: T[]
 ): T[] {

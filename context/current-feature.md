@@ -1,16 +1,44 @@
-# Current Feature
+# Current Feature: Validation Feedback Cleanup
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- What does success look like? -->
+- `BrandFormDialog`, `ConsoleFormDialog`, and `GameFormDialog` each validate client-side
+  via `safeParse` against the same zod schema their Server Action already validates
+  against server-side — no hand-rolled `if`-chain duplication remains in any of the three
+- Every rule the old `if` chains checked (required fields, length limits, numeric ranges,
+  saga tag length) still produces the same user-facing error message and still blocks
+  submission client-side (no server round-trip for a client-catchable error)
+- Error message ordering (which single message shows first when multiple fields are
+  invalid) matches pre-refactor behavior — reorder zod schema field declarations if
+  needed, and call out explicitly any intentional reordering
+- No behavior change to Server Actions, toast messages, or success paths
+- Existing unit tests for `lib/brand-utils.ts`/`lib/console-utils.ts`/`lib/game-utils.ts`
+  still pass; add tests only if a schema was extended to cover a field it didn't before
+- `npm run build`, `npm run lint`, `npx tsc --noEmit`, and `npm test` all pass
 
 ## Notes
 
-<!-- Additional context, constraints, or details from spec -->
+- Refactor only — no new UX. Keep the current one-message-at-a-time error display near
+  the Save button in all three dialogs (`{error && <p className="text-sm
+  text-destructive">{error}</p>}`); explicitly NOT rebuilding per-field inline errors
+  (`GenresTable`'s pattern stays unique to that page).
+- Where a dialog's existing schema in `lib/*-utils.ts` doesn't yet cover every field the
+  hand-rolled checks cover, extend that schema (don't write a second one) — one schema
+  per entity is the single source of truth for both client and server.
+- Files to touch:
+  - `components/brands/BrandFormDialog.tsx` (~line 56 check) → `lib/brand-utils.ts` schema
+  - `components/consoles/ConsoleFormDialog.tsx` (~lines 89/93/97 checks) →
+    `lib/console-utils.ts` schema
+  - `components/games/GameFormDialog.tsx` (~lines 148/170/174/178/184 checks) →
+    `lib/game-utils.ts` schema
+- Out of scope: per-field inline errors/`aria-invalid`, any server-side validation/toast/
+  Server Action changes, `isSaving`/disabled-during-submit behavior, `GenresTable`'s
+  validation.
+- Full spec: `context/feature/16-validation-feedback.md`
 
 ## History
 

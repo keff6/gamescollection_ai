@@ -27,6 +27,8 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import {
+  gameFormSchema,
+  gameSagaTagSchema,
   getGameYearOptions,
   isDuplicateSagaTag,
   mapBooleansToMediaStatus,
@@ -144,8 +146,9 @@ export function GameFormDialog({
   function addSaga() {
     const trimmed = sagaInput.trim();
     if (!trimmed) return;
-    if (trimmed.length > 50) {
-      setError("Saga tag must be 50 characters or fewer.");
+    const validation = gameSagaTagSchema.safeParse(trimmed);
+    if (!validation.success) {
+      setError(validation.error.issues[0].message);
       return;
     }
     if (isDuplicateSagaTag(values.saga, trimmed)) {
@@ -166,24 +169,10 @@ export function GameFormDialog({
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!values.title.trim()) {
-      setError("Title is required.");
+    const validation = gameFormSchema.safeParse(values);
+    if (!validation.success) {
+      setError(validation.error.issues[0].message);
       return;
-    }
-    if (!values.consoleId) {
-      setError("Console is required.");
-      return;
-    }
-    if (values.genreIds.length === 0) {
-      setError("Select at least one genre.");
-      return;
-    }
-    if (values.rating) {
-      const rating = Number(values.rating);
-      if (!Number.isInteger(rating) || rating < 1 || rating > 10) {
-        setError("Rating must be a whole number between 1 and 10.");
-        return;
-      }
     }
 
     setError(null);
