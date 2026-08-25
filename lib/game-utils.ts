@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { toEntityErrorMessage } from "@/lib/error-utils";
+import { parseYearOrInfinity } from "@/lib/year-utils";
 
 export type MediaStatus = "incomplete" | "complete" | "new" | "digital";
 
@@ -27,15 +28,10 @@ export interface GameListItem {
   isFinished: boolean;
 }
 
-function parseYear(year: string | null) {
-  const parsed = parseInt(year ?? "", 10);
-  return Number.isNaN(parsed) ? Infinity : parsed;
-}
-
 export function sortGames(games: GameListItem[], sort: GameSortKey) {
   const sorted = [...games];
   if (sort === "year") {
-    sorted.sort((a, b) => parseYear(a.year) - parseYear(b.year));
+    sorted.sort((a, b) => parseYearOrInfinity(a.year) - parseYearOrInfinity(b.year));
   } else if (sort === "rating") {
     sorted.sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1));
   } else {
