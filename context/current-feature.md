@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress
+Completed — ready to merge
 
 ## Goals
 
@@ -42,6 +42,49 @@ and touches sort logic in multiple files — explicitly deferred per user decisi
 ## History
 
 <!-- Keep this updated. Earliest to Latest -->
+
+- **2026-08-24** — Code Scan Improvements: fixed all 10 findings from the code-scanner
+  audit on `fix/code-scan-improvements`, one commit per item so each is independently
+  reviewable — (1) closed an open redirect where `/login`'s `callbackUrl` query param
+  was passed straight into a redirect with no same-origin check
+  (`app/login/page.tsx`, `components/auth/LoginForm.tsx`), via a new shared
+  `lib/safe-redirect.ts`; (2) fixed `GamesList.tsx`'s `handleUpdated` not re-checking
+  `matchesSearch()`/adjusting `total` the way `handleCreated` does, so renaming a game
+  out of an active search left a stale row and a wrong count; (3) extracted the
+  byte-identical `ActionResult<T>` + `requireAuth()` duplicated across all four Server
+  Action files into `lib/server-action.ts`; (4) consolidated the four duplicated
+  `toXErrorMessage()` helpers (brand/console/game/genre-utils.ts) into
+  `lib/error-utils.ts`; (5) while consolidating, closed the info-exposure gap the
+  duplication was hiding — the old helpers passed through `.message` for *any* `Error`
+  instance, not just the app's own hand-thrown ones, so a raw Prisma driver error
+  could have reached a user-facing toast; added `lib/app-error.ts`'s `AppError` and
+  switched every intentional `throw new Error(...)` in brands/consoles/games/genres.ts
+  to `AppError`, and the shared helper now only passes through `ZodError` issues and
+  `AppError` messages; (6) added a `genreIds` existence check in `lib/games.ts`
+  (`assertGenresExist`) before create/update, mirroring the existing
+  `assertConsoleExists`, so a stale genre id fails with a clean message instead of an
+  unhandled Prisma FK error; (7) wrapped `deleteBrand`/`deleteConsole`'s
+  check-then-delete in `db.$transaction` to narrow the TOCTOU window where a
+  concurrent child create could land between the check and the cascade-delete;
+  (8) split `GenrePicker` and `SagaTagInput` out of the ~510-line `GameFormDialog.tsx`
+  into their own controlled components under `components/games/`; (9) extracted a
+  shared `lib/year-utils.ts` `parseYearOrInfinity`, deduped from `game-utils.ts`'s
+  `sortGames` and `console-utils.ts`'s `sortConsolesByYear`; (10) applied
+  `normalizeGenerationValue` at display time in `ConsoleCard.tsx`, not just at
+  edit-form-open time, so a console whose `generation` was still a legacy bare digit
+  ("1") shows the full label ("1st (1972 - 1978)") on the read-only browse card too,
+  not just after being re-saved once through the edit form. **Deferred, not done in
+  this branch:** migrating `Game.year`/`Console.year` from string to `Int` so games
+  pagination becomes a real DB-level `skip`/`take` instead of an in-memory
+  fetch-all-then-slice (the scanner's performance finding) — flagged as a follow-up
+  since it needs a Prisma migration against the Neon dev DB and touches sort logic in
+  multiple files, out of scope per explicit user decision. Every checkpoint was
+  verified individually (`npm run lint`, `npx tsc --noEmit`, `npm test`,
+  `npm run build`, plus a live check against the real dev DB/dev server via Playwright
+  or a `tsx` driver script for each behavior-affecting change) before being committed.
+  Test suite grew from 147 to 166 passing (new tests: `lib/safe-redirect.test.ts`,
+  `lib/error-utils.test.ts`, `lib/year-utils.test.ts`, plus `AppError`-aware
+  additions to the four existing `to*ErrorMessage` test suites).
 
 - **2026-08-24** — Validation Feedback Cleanup: deduped each of the three CRUD dialogs' (`BrandFormDialog`, `ConsoleFormDialog`, `GameFormDialog`) hand-rolled, sequential `if`-chain client-side validation onto the same zod schemas their Server Actions already validate against server-side, closing the gap where the two paths could silently drift apart. Added one combined form schema per entity (`brandFormSchema` in `lib/brand-utils.ts`; `consoleFormSchema` in `lib/console-utils.ts`; `gameFormSchema` in `lib/game-utils.ts`), composed from the existing per-field schemas rather than writing new ones — kept the pre-existing field-declaration order (name/origin; name/shortName/brandId/year/generation/isPortable; title/consoleId/genreIds/rating/year/developer/publisher/notes/saga) so zod's `safeParse` issue ordering preserves the same "first error shown" priority as the old `if` chains (Title-before-Console-before-Genre-before-Rating for games, confirmed). `GameFormDialog`'s separate saga-tag-length check (in `addSaga()`, outside the main submit flow) was swapped for `gameSagaTagSchema.safeParse`. Refactor only, no UX change — all three dialogs still show a single message near Save via the same `{error && <p className="text-sm text-destructive">{error}</p>}`; no server-side validation, toast wording, Server Action, or `isSaving` behavior touched. **One accepted deviation, flagged during implementation:** the shared schemas' messages omit the trailing period the old hand-rolled checks used (e.g. `"Name is required"` vs. the old `"Name is required."`) — since editing schema text would also change server-side toast wording (explicitly out of scope), the wording was left as-is; same field, same meaning, trivial punctuation diff. No new tests needed — no schema gained a field it didn't already validate server-side. Verified against the real dev server via a Playwright driver script covering every previously-checked rule in all three dialogs (Brand: required name, origin max-length; Console: required name, required short name; Game: Title→Console→Genre→Rating priority order plus the saga-tag length check) — all messages and ordering matched pre-refactor behavior. `npm run lint`, `npx tsc --noEmit`, `npm run build`, and `npm test` (147/147, unchanged) all pass.
 
