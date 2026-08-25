@@ -1,6 +1,5 @@
 "use server";
 
-import { auth } from "@/auth";
 import {
   createConsole,
   deleteConsole,
@@ -8,18 +7,7 @@ import {
   type ConsoleWithGameCount,
 } from "@/lib/consoles";
 import { toConsoleErrorMessage } from "@/lib/console-utils";
-
-type ActionResult<T> =
-  | { success: true; data: T }
-  | { success: false; error: string };
-
-async function requireAuth(): Promise<ActionResult<never> | null> {
-  const session = await auth();
-  if (!session) {
-    return { success: false, error: "You must be logged in to do that." };
-  }
-  return null;
-}
+import { requireAuth, type ActionResult } from "@/lib/server-action";
 
 export async function createConsoleAction(
   brandId: string,
