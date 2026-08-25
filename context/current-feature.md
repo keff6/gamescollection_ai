@@ -1,16 +1,32 @@
-# Current Feature
+# Current Feature: Add Footer
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- What does success look like? -->
+- Add a site-wide footer, rendered on every route (same pattern as the Navbar)
+- Fixed 60px height, content horizontally and vertically centered
+- Shows copyright text: "2026 Kevin Fallas"
+- Shows 4 icon links, opening in a way appropriate to each type:
+  - LinkedIn → https://www.linkedin.com/in/kevin-fallas/
+  - GitHub → https://github.com/keff6
+  - Portfolio → https://kevin-fallas.vercel.app/
+  - Mail → mailto:kev.fallas@gmail.com
 
 ## Notes
 
-<!-- Additional context, constraints, or details from spec -->
+- External links (LinkedIn, GitHub, Portfolio) should open in a new tab
+  (`target="_blank"` + `rel="noopener noreferrer"`); mailto link opens the
+  user's mail client, no target needed
+- Use icon components consistent with existing icon usage in the repo (check
+  `Navbar.tsx`/`lucide-react` or similar) rather than introducing a new icon
+  library if one is already a dependency
+- Should follow the existing dark theme tokens (background, border,
+  muted-foreground, accent teal) defined in `globals.css`
+- Placement: rendered in `app/layout.tsx` alongside the Navbar, likely below
+  `<main>`
 
 ## History
 
