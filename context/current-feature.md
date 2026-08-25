@@ -1,48 +1,22 @@
-# Current Feature: Validation Feedback Cleanup
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- `BrandFormDialog`, `ConsoleFormDialog`, and `GameFormDialog` each validate client-side
-  via `safeParse` against the same zod schema their Server Action already validates
-  against server-side — no hand-rolled `if`-chain duplication remains in any of the three
-- Every rule the old `if` chains checked (required fields, length limits, numeric ranges,
-  saga tag length) still produces the same user-facing error message and still blocks
-  submission client-side (no server round-trip for a client-catchable error)
-- Error message ordering (which single message shows first when multiple fields are
-  invalid) matches pre-refactor behavior — reorder zod schema field declarations if
-  needed, and call out explicitly any intentional reordering
-- No behavior change to Server Actions, toast messages, or success paths
-- Existing unit tests for `lib/brand-utils.ts`/`lib/console-utils.ts`/`lib/game-utils.ts`
-  still pass; add tests only if a schema was extended to cover a field it didn't before
-- `npm run build`, `npm run lint`, `npx tsc --noEmit`, and `npm test` all pass
+<!-- What does success look like? -->
 
 ## Notes
 
-- Refactor only — no new UX. Keep the current one-message-at-a-time error display near
-  the Save button in all three dialogs (`{error && <p className="text-sm
-  text-destructive">{error}</p>}`); explicitly NOT rebuilding per-field inline errors
-  (`GenresTable`'s pattern stays unique to that page).
-- Where a dialog's existing schema in `lib/*-utils.ts` doesn't yet cover every field the
-  hand-rolled checks cover, extend that schema (don't write a second one) — one schema
-  per entity is the single source of truth for both client and server.
-- Files to touch:
-  - `components/brands/BrandFormDialog.tsx` (~line 56 check) → `lib/brand-utils.ts` schema
-  - `components/consoles/ConsoleFormDialog.tsx` (~lines 89/93/97 checks) →
-    `lib/console-utils.ts` schema
-  - `components/games/GameFormDialog.tsx` (~lines 148/170/174/178/184 checks) →
-    `lib/game-utils.ts` schema
-- Out of scope: per-field inline errors/`aria-invalid`, any server-side validation/toast/
-  Server Action changes, `isSaving`/disabled-during-submit behavior, `GenresTable`'s
-  validation.
-- Full spec: `context/feature/16-validation-feedback.md`
+<!-- Additional context, constraints, or details from spec -->
 
 ## History
 
 <!-- Keep this updated. Earliest to Latest -->
+
+- **2026-08-24** — Validation Feedback Cleanup: deduped each of the three CRUD dialogs' (`BrandFormDialog`, `ConsoleFormDialog`, `GameFormDialog`) hand-rolled, sequential `if`-chain client-side validation onto the same zod schemas their Server Actions already validate against server-side, closing the gap where the two paths could silently drift apart. Added one combined form schema per entity (`brandFormSchema` in `lib/brand-utils.ts`; `consoleFormSchema` in `lib/console-utils.ts`; `gameFormSchema` in `lib/game-utils.ts`), composed from the existing per-field schemas rather than writing new ones — kept the pre-existing field-declaration order (name/origin; name/shortName/brandId/year/generation/isPortable; title/consoleId/genreIds/rating/year/developer/publisher/notes/saga) so zod's `safeParse` issue ordering preserves the same "first error shown" priority as the old `if` chains (Title-before-Console-before-Genre-before-Rating for games, confirmed). `GameFormDialog`'s separate saga-tag-length check (in `addSaga()`, outside the main submit flow) was swapped for `gameSagaTagSchema.safeParse`. Refactor only, no UX change — all three dialogs still show a single message near Save via the same `{error && <p className="text-sm text-destructive">{error}</p>}`; no server-side validation, toast wording, Server Action, or `isSaving` behavior touched. **One accepted deviation, flagged during implementation:** the shared schemas' messages omit the trailing period the old hand-rolled checks used (e.g. `"Name is required"` vs. the old `"Name is required."`) — since editing schema text would also change server-side toast wording (explicitly out of scope), the wording was left as-is; same field, same meaning, trivial punctuation diff. No new tests needed — no schema gained a field it didn't already validate server-side. Verified against the real dev server via a Playwright driver script covering every previously-checked rule in all three dialogs (Brand: required name, origin max-length; Console: required name, required short name; Game: Title→Console→Genre→Rating priority order plus the saga-tag length check) — all messages and ordering matched pre-refactor behavior. `npm run lint`, `npx tsc --noEmit`, `npm run build`, and `npm test` (147/147, unchanged) all pass.
 
 - **2026-08-24** — Responsive Pass: verified every Phase 3 CRUD surface (added post-auth and never screenshot-checked at mobile/tablet widths, unlike the Phase 1 read-only pages) via 55 headless-Chromium screenshots at desktop/tablet/375px — `BrandFormDialog`/`ConsoleFormDialog`/`GameFormDialog` (blank, prefilled-edit, validation-error states), `BrandCard`/`ConsoleCard`/`GameCard` edit+delete icon buttons, both delete-confirmation `alert-dialog` variants (blocked "has children" and normal confirm), `/admin/genres`'s `GenresTable` (inline edit, add-row, delete), and the Navbar Admin dropdown in both its desktop and mobile-hamburger forms — no horizontal overflow or unreachable controls found anywhere. Fixed the one known gap called out by the spec: added `max-h-[70vh] overflow-y-auto` to `BrandFormDialog`'s and `ConsoleFormDialog`'s form bodies, matching `GameFormDialog`'s existing pattern, so the Save button stays reachable by scrolling on a short mobile viewport instead of extending off-screen with no way to reach it. **Found and fixed one real bug outside the spec's stated scope, after flagging it and getting explicit go-ahead:** Console/Game Edit forms showed a blank Year/Generation select for legacy pre-1980s data — not a layout bug (reproduced identically at desktop width). Root cause, confirmed via a live DB query: `Console.year` ranges 1977–2020 and `Game.year` ranges 1977–2025, but `CONSOLE_YEAR_START`/`GAME_YEAR_START` were 1980/1985, so any pre-range year had no matching `<SelectItem>`; separately, all 27 seeded `Console.generation` values are bare digit strings ("1".."9"), never the full `CONSOLE_GENERATIONS` label text ("1st (1972 - 1978)") the Select actually compares against — so every console's Generation showed blank on edit, not just one. Fixed by widening both year-start constants to 1970 (`lib/console-utils.ts`, `lib/game-utils.ts`) and adding `normalizeGenerationValue()` (`lib/console-utils.ts`) to map a legacy bare-digit generation to its label before the form initializes, applied at the single call site building the edit-form props (`ConsoleCard.tsx`); saving an edited console now persists the full label going forward (self-healing). 4 new unit tests in `lib/console-utils.test.ts`; existing `getConsoleYearOptions`/`getGameYearOptions` tests updated for the 1970 start. Verified both fixes live against the real dev DB (Atari 2600 → Year 1977/Generation "1st (1972 - 1978)" now shown correctly; Asteroids → Year 1981 now shown correctly). `npm run lint`, `npm run build`, and `npm test` (147/147, up from 143) all pass.
 
