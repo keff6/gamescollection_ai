@@ -1,36 +1,34 @@
-# Current Feature: Add Footer
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Add a site-wide footer, rendered on every route (same pattern as the Navbar)
-- Fixed 60px height, content horizontally and vertically centered
-- Shows copyright text: "2026 Kevin Fallas"
-- Shows 4 icon links, opening in a way appropriate to each type:
-  - LinkedIn → https://www.linkedin.com/in/kevin-fallas/
-  - GitHub → https://github.com/keff6
-  - Portfolio → https://kevin-fallas.vercel.app/
-  - Mail → mailto:kev.fallas@gmail.com
+<!-- What does success look like? -->
 
 ## Notes
 
-- External links (LinkedIn, GitHub, Portfolio) should open in a new tab
-  (`target="_blank"` + `rel="noopener noreferrer"`); mailto link opens the
-  user's mail client, no target needed
-- Use icon components consistent with existing icon usage in the repo (check
-  `Navbar.tsx`/`lucide-react` or similar) rather than introducing a new icon
-  library if one is already a dependency
-- Should follow the existing dark theme tokens (background, border,
-  muted-foreground, accent teal) defined in `globals.css`
-- Placement: rendered in `app/layout.tsx` alongside the Navbar, likely below
-  `<main>`
+<!-- Additional context, constraints, or details from spec -->
 
 ## History
 
 <!-- Keep this updated. Earliest to Latest -->
+
+- **2026-08-25** — Add Footer: added a site-wide `Footer` (`components/layout/Footer.tsx`),
+  mounted in `app/layout.tsx` below `<main>` alongside the Navbar so it renders on every
+  route. Fixed 60px height (`h-15`) with centered content: "2026 Kevin Fallas" plus 4 icon
+  links (LinkedIn, GitHub, Portfolio, Mail). `lucide-react` (already a dependency, used
+  elsewhere in `Navbar.tsx`) doesn't ship brand/logo icons in the installed version, so
+  LinkedIn/GitHub use hand-rolled inline SVGs — same pattern `Navbar.tsx` already uses for
+  its own custom icons (`GamepadIcon`, `LogInIcon`, etc.) — while Portfolio/Mail reuse
+  `lucide-react`'s `Globe`/`Mail`. External links (LinkedIn, GitHub, Portfolio) get
+  `target="_blank"` + `rel="noopener noreferrer"`; the `mailto:` link doesn't. Purely
+  presentational/static — no new tests needed, no schema or data-layer changes. Verified
+  via headless-Chromium screenshots at desktop (1440px) and mobile (375px) widths (footer
+  centered, no overflow, correct hrefs/target/rel confirmed via the rendered HTML) plus
+  `npm run lint`, `npx tsc --noEmit`, `npm run build`, and `npm test` (170/170, unchanged).
 
 - **2026-08-25** — Login Rate Limiting: added brute-force protection to the login
   flow only — every other write path already requires an authenticated session via
