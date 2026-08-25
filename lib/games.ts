@@ -1,4 +1,5 @@
 import { Prisma } from "@/generated/prisma/client";
+import { AppError } from "@/lib/app-error";
 import { db } from "@/lib/prisma";
 import {
   gameConsoleIdSchema,
@@ -128,7 +129,7 @@ async function assertConsoleExists(consoleId: string) {
     select: { id: true },
   });
   if (!consoleItem) {
-    throw new Error("Selected console doesn't exist");
+    throw new AppError("Selected console doesn't exist");
   }
 }
 

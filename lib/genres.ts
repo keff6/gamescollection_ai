@@ -1,3 +1,4 @@
+import { AppError } from "@/lib/app-error";
 import { db } from "@/lib/prisma";
 import { genreNameSchema, type GenreOption } from "@/lib/genre-utils";
 
@@ -22,7 +23,7 @@ async function assertNameAvailable(name: string, excludeId?: string) {
   });
 
   if (existing) {
-    throw new Error(`A genre named "${name}" already exists`);
+    throw new AppError(`A genre named "${name}" already exists`);
   }
 }
 

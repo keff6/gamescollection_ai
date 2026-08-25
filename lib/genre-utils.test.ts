@@ -1,5 +1,6 @@
 import { ZodError } from "zod";
 import { describe, expect, it } from "vitest";
+import { AppError } from "@/lib/app-error";
 import {
   genreNameSchema,
   isDuplicateGenreName,
@@ -90,8 +91,14 @@ describe("toGenreErrorMessage", () => {
     expect(toGenreErrorMessage(error, "fallback")).toBe("fallback");
   });
 
-  it("uses a plain Error's message", () => {
-    expect(toGenreErrorMessage(new Error("boom"), "fallback")).toBe("boom");
+  it("uses an AppError's message", () => {
+    expect(
+      toGenreErrorMessage(new AppError('A genre named "Action" already exists'), "fallback")
+    ).toBe('A genre named "Action" already exists');
+  });
+
+  it("falls back for a plain Error (not an AppError), to avoid leaking internal details", () => {
+    expect(toGenreErrorMessage(new Error("boom"), "fallback")).toBe("fallback");
   });
 
   it("falls back for a non-Error value", () => {

@@ -1,4 +1,5 @@
-import { ZodError, z } from "zod";
+import { z } from "zod";
+import { toEntityErrorMessage } from "@/lib/error-utils";
 
 export type MediaStatus = "incomplete" | "complete" | "new" | "digital";
 
@@ -167,11 +168,5 @@ export function isDuplicateSagaTag(saga: string[], candidate: string): boolean {
 }
 
 export function toGameErrorMessage(error: unknown, fallback: string): string {
-  if (error instanceof ZodError) {
-    return error.issues[0]?.message ?? fallback;
-  }
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return fallback;
+  return toEntityErrorMessage(error, fallback);
 }

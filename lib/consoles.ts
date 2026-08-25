@@ -1,3 +1,4 @@
+import { AppError } from "@/lib/app-error";
 import { db } from "@/lib/prisma";
 import {
   consoleBrandIdSchema,
@@ -94,7 +95,7 @@ export async function createConsole(
 
   const brand = await db.brand.findUnique({ where: { id: validBrandId } });
   if (!brand) {
-    throw new Error("Selected brand doesn't exist");
+    throw new AppError("Selected brand doesn't exist");
   }
 
   const consoleItem = await db.console.create({
@@ -131,7 +132,7 @@ export async function updateConsole(
 
   const brand = await db.brand.findUnique({ where: { id: brandId } });
   if (!brand) {
-    throw new Error("Selected brand doesn't exist");
+    throw new AppError("Selected brand doesn't exist");
   }
 
   const consoleItem = await db.console.update({
@@ -157,11 +158,11 @@ export async function deleteConsole(id: string): Promise<void> {
   });
 
   if (!consoleItem) {
-    throw new Error("Console not found");
+    throw new AppError("Console not found");
   }
 
   if (consoleItem._count.games > 0) {
-    throw new Error(
+    throw new AppError(
       `Can't delete "${consoleItem.name}" — it still has ${consoleItem._count.games} game${
         consoleItem._count.games === 1 ? "" : "s"
       }. Remove or reassign them first.`

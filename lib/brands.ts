@@ -1,3 +1,4 @@
+import { AppError } from "@/lib/app-error";
 import { db } from "@/lib/prisma";
 import { brandNameSchema, brandOriginSchema, type BrandOption } from "@/lib/brand-utils";
 
@@ -75,11 +76,11 @@ export async function deleteBrand(id: string): Promise<void> {
   });
 
   if (!brand) {
-    throw new Error("Brand not found");
+    throw new AppError("Brand not found");
   }
 
   if (brand._count.consoles > 0) {
-    throw new Error(
+    throw new AppError(
       `Can't delete "${brand.name}" — it still has ${brand._count.consoles} console${
         brand._count.consoles === 1 ? "" : "s"
       }. Remove or reassign them first.`

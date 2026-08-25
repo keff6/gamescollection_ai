@@ -1,5 +1,6 @@
 import { ZodError } from "zod";
 import { describe, expect, it } from "vitest";
+import { AppError } from "@/lib/app-error";
 import {
   CONSOLE_GENERATIONS,
   consoleBrandIdSchema,
@@ -185,8 +186,14 @@ describe("toConsoleErrorMessage", () => {
     expect(toConsoleErrorMessage(error, "fallback")).toBe("fallback");
   });
 
-  it("uses a plain Error's message", () => {
-    expect(toConsoleErrorMessage(new Error("boom"), "fallback")).toBe("boom");
+  it("uses an AppError's message", () => {
+    expect(toConsoleErrorMessage(new AppError("Console not found"), "fallback")).toBe(
+      "Console not found"
+    );
+  });
+
+  it("falls back for a plain Error (not an AppError), to avoid leaking internal details", () => {
+    expect(toConsoleErrorMessage(new Error("boom"), "fallback")).toBe("fallback");
   });
 
   it("falls back for a non-Error value", () => {
