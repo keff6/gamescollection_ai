@@ -28,6 +28,13 @@
   --chart-3: #0d9488;
   --chart-4: #5eead4;
   --chart-5: #99f6e4;
+  --condition-incomplete: #596678;
+  --condition-complete: #0f766e;
+  --condition-digital: #2dd4bf;
+  --condition-new: #99f6e4;
+  --status-backlog: #2563eb;
+  --status-playing: #b45309;
+  --status-finished: #15803d;
   --radius: 0.625rem;
 }
 
@@ -55,6 +62,13 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-condition-incomplete: var(--condition-incomplete);
+  --color-condition-complete: var(--condition-complete);
+  --color-condition-digital: var(--condition-digital);
+  --color-condition-new: var(--condition-new);
+  --color-status-backlog: var(--status-backlog);
+  --color-status-playing: var(--status-playing);
+  --color-status-finished: var(--status-finished);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-geist-sans);

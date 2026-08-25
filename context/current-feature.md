@@ -2,15 +2,25 @@
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- What does success look like? -->
+Redesign `GameCard.tsx` (games list) to match the reference `context/screenshots/game-cards.png`
+(a prior version of the app):
+- Add a "Condition" pill (media status: Incomplete/Complete/New/Digital) — always shown.
+- Add a "Status" pill (playable status: Backlog/Playing/Finished) — shown only for
+  non-default states; "Owned" shows no pill.
+- Keep the existing rating badge as-is.
+- Add a notes-hover tooltip (icon in the card header, shown only when a game has notes).
+- Stay responsive — pills/tooltip must reflow cleanly at mobile widths, no horizontal overflow.
 
 ## Notes
 
-<!-- Additional context, constraints, or details from spec -->
+Full implementation plan (data flow, exact pill color tokens with contrast values, tooltip
+wiring) at `/home/kevin/.claude/plans/i-want-to-redesign-sharded-pearl.md`. Presentation-only
+change — no schema/DB/Server Action changes. Pill visibility rule confirmed with user: hide
+default states (Owned), matching the old screenshot's behavior.
 
 ## History
 

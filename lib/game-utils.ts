@@ -135,6 +135,21 @@ export function mapBooleansToMediaStatus(input: {
   return "incomplete";
 }
 
+export const MEDIA_STATUS_LABELS: Record<MediaStatus, string> = {
+  incomplete: "Incomplete",
+  complete: "Complete",
+  new: "New",
+  digital: "Digital",
+};
+
+export const GAME_STATUS_LABELS: Record<GameStatusValue, string> = {
+  WISHLIST: "Wishlist",
+  BACKLOG: "Backlog",
+  OWNED: "Owned",
+  PLAYING: "Playing",
+  COMPLETED: "Finished",
+};
+
 export function mapMediaStatusToBooleans(mediaStatus: MediaStatus): {
   isNew: boolean;
   isComplete: boolean;
