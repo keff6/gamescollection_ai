@@ -1,10 +1,9 @@
 "use client";
 
-import { PlusIcon, X } from "lucide-react";
+import { PlusIcon } from "lucide-react";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
 import { createGameAction, updateGameAction } from "@/app/consoles/[consoleId]/games/actions";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -26,11 +25,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { GenrePicker } from "@/components/games/GenrePicker";
+import { SagaTagInput } from "@/components/games/SagaTagInput";
 import {
   gameFormSchema,
-  gameSagaTagSchema,
   getGameYearOptions,
-  isDuplicateSagaTag,
   mapBooleansToMediaStatus,
   mapMediaStatusToBooleans,
   type MediaStatus,
@@ -126,44 +125,6 @@ export function GameFormDialog({
       setSagaInput("");
       setError(null);
     }
-  }
-
-  function addGenre(genreId: string) {
-    setValues((current) =>
-      current.genreIds.includes(genreId)
-        ? current
-        : { ...current, genreIds: [...current.genreIds, genreId] }
-    );
-  }
-
-  function removeGenre(genreId: string) {
-    setValues((current) => ({
-      ...current,
-      genreIds: current.genreIds.filter((id) => id !== genreId),
-    }));
-  }
-
-  function addSaga() {
-    const trimmed = sagaInput.trim();
-    if (!trimmed) return;
-    const validation = gameSagaTagSchema.safeParse(trimmed);
-    if (!validation.success) {
-      setError(validation.error.issues[0].message);
-      return;
-    }
-    if (isDuplicateSagaTag(values.saga, trimmed)) {
-      setSagaInput("");
-      return;
-    }
-    setValues((current) => ({ ...current, saga: [...current.saga, trimmed] }));
-    setSagaInput("");
-  }
-
-  function removeSaga(tag: string) {
-    setValues((current) => ({
-      ...current,
-      saga: current.saga.filter((existingTag) => existingTag !== tag),
-    }));
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -418,82 +379,19 @@ export function GameFormDialog({
             />
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <Label>Genre(s) *</Label>
-            <Select value="" onValueChange={addGenre}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Add genre(s)" />
-              </SelectTrigger>
-              <SelectContent>
-                {genres
-                  .filter((genre) => !values.genreIds.includes(genre.id))
-                  .map((genre) => (
-                    <SelectItem key={genre.id} value={genre.id}>
-                      {genre.name}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
-            {values.genreIds.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {values.genreIds.map((genreId) => {
-                  const genre = genres.find((option) => option.id === genreId);
-                  if (!genre) return null;
-                  return (
-                    <Badge key={genreId} variant="secondary" className="gap-1">
-                      {genre.name}
-                      <button
-                        type="button"
-                        onClick={() => removeGenre(genreId)}
-                        aria-label={`Remove ${genre.name}`}
-                      >
-                        <X className="size-3" />
-                      </button>
-                    </Badge>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+          <GenrePicker
+            genres={genres}
+            selectedIds={values.genreIds}
+            onChange={(genreIds) => setValues((current) => ({ ...current, genreIds }))}
+          />
 
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="game-saga">Sagas / Tags</Label>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex gap-2">
-                <Input
-                  id="game-saga"
-                  placeholder="Add a saga"
-                  value={sagaInput}
-                  maxLength={50}
-                  onChange={(event) => setSagaInput(event.target.value)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") {
-                      event.preventDefault();
-                      addSaga();
-                    }
-                  }}
-                />
-                <Button type="button" variant="outline" onClick={addSaga}>
-                  Add
-                  <PlusIcon />
-                </Button>
-              </div>
-              <div className="flex min-h-10 flex-wrap content-start gap-2 rounded-lg border border-input p-2.5">
-                {values.saga.map((tag) => (
-                  <Badge key={tag} variant="secondary" className="gap-1">
-                    {tag}
-                    <button
-                      type="button"
-                      onClick={() => removeSaga(tag)}
-                      aria-label={`Remove ${tag}`}
-                    >
-                      <X className="size-3" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          </div>
+          <SagaTagInput
+            value={sagaInput}
+            onValueChange={setSagaInput}
+            tags={values.saga}
+            onTagsChange={(saga) => setValues((current) => ({ ...current, saga }))}
+            onError={setError}
+          />
 
           {error && <p className="text-sm text-destructive">{error}</p>}
 
