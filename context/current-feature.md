@@ -2,31 +2,70 @@
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-Add rate limiting to the login flow to prevent credential brute-forcing.
-Scope: login only (the 9 write Server Actions already require an
-authenticated session, so they're out of scope). Storage: Postgres via the
-existing Neon/Prisma setup (no new infra) — Vercel serverless functions don't
-share in-memory state across invocations, so a real backend is required.
+<!-- What does success look like? -->
 
 ## Notes
 
-- New `LoginAttempt` Prisma model (migration `add_login_attempt`), tracked by
-  normalized (trimmed/lowercased) attempted email, independent of whether the
-  email matches a real `User` row.
-- Fixed window: 5 failed attempts / 15-minute window → 15-minute lockout.
-  Lockout check happens before the DB user lookup / bcrypt compare.
-- Distinct lockout message on the client via NextAuth v5's
-  `CredentialsSignin.code` field (verified against `@auth/core` source —
-  sanctioned mechanism, not a hack).
-- Full plan: `/home/kevin/.claude/plans/i-want-to-add-humble-rabbit.md`
+<!-- Additional context, constraints, or details from spec -->
 
 ## History
 
 <!-- Keep this updated. Earliest to Latest -->
+
+- **2026-08-25** — Login Rate Limiting: added brute-force protection to the login
+  flow only — every other write path already requires an authenticated session via
+  `requireAuth()`, so the credentials `authorize()` callback was the one real
+  unauthenticated attack surface. Storage is Postgres via the existing Neon/Prisma
+  connection rather than new infra (Upstash/Redis), since Vercel serverless
+  functions can't share in-memory state across invocations. Added a `LoginAttempt`
+  model (migration `add_login_attempt`) keyed by a normalized (trimmed/lowercased)
+  identifier — the attempted email, tracked independent of whether it matches a
+  real `User` row, which also closes a user-enumeration-by-timing gap since a
+  nonexistent-email guess and a wrong-password-for-a-real-email guess take the
+  same code path. Fixed window (not sliding, simpler to implement correctly with
+  one nullable timestamp column at this threat model): 5 failed attempts within 15
+  minutes locks the identifier out for 15 minutes; the lockout check in `auth.ts`
+  runs before the `db.user.findUnique` call and before `bcrypt.compare`, so a
+  locked-out caller never triggers either. `lib/login-rate-limit.ts` uses Prisma's
+  `{ increment: 1 }` (compiles to a row-locked relative `UPDATE`) for the
+  steady-state failure count, avoiding a lost-update race under concurrent
+  requests; the only unlocked path (first failure in a new/expired window) has a
+  narrow, explicitly-accepted race whose worst case is undercounting by one, never
+  a lockout bypass — consistent with `deleteBrand`/`deleteConsole`'s existing
+  precedent of read-then-write inside `$transaction` without explicit row locking.
+  A successful login deletes the row outright (`resetAttempts`) rather than
+  zeroing it, so no row lingers for the real admin account between lockout
+  episodes; garbage/scanned emails do accumulate their own never-cleaned-up rows,
+  accepted as fine at this app's personal, low-traffic scale rather than building
+  TTL/cleanup logic. Added `lib/login-locked-error.ts` (`LoginLockedError extends
+  CredentialsSignin`) to surface a distinct client-side message — verified
+  directly against `@auth/core`/`next-auth` source that `CredentialsSignin.code`
+  (not `type`, which is meant to stay a fixed enum) is the sanctioned mechanism
+  for this, and that `next-auth/react`'s `signIn()` already parses it out of the
+  redirect URL as `SignInResponse.code`, so `LoginForm.tsx` just branches on
+  `result.code === "login_locked"` for the "Too many failed attempts" message vs.
+  the existing generic "Invalid email or password". Also added `maxLength={40}` to
+  both the email and password inputs on the login form (separate small ask from
+  the same session). New `lib/login-rate-limit.test.ts` (4 tests, covering
+  `normalizeIdentifier` — the only pure/non-DB logic in the new code, matching this
+  project's established precedent of skipping tests for thin Prisma passthroughs).
+  Verified end-to-end against the real dev DB via scripted requests to the actual
+  NextAuth credentials callback endpoint (Playwright's Chromium couldn't be
+  installed in this sandboxed environment — no root access — so verification used
+  direct HTTP requests exercising the identical code path instead): 5 wrong-password
+  attempts for the seeded admin email produced `failedCount = 5` and a `lockedUntil`
+  ~15 minutes out; the 6th attempt short-circuited with `code=login_locked` and no
+  further increment; a nonexistent email locked out identically in its own,
+  separate row; back-dating `firstFailedAt`/`lockedUntil` to simulate window expiry
+  followed by a correct login succeeded and deleted the row, confirming a fresh
+  lockout cycle starts clean afterward. Test-generated rows were deleted and the
+  dev server stopped before committing. `npm run lint`, `npx tsc --noEmit`,
+  `npm test` (170/170, up from 166), `npm run build`, and `npx prisma migrate
+  status` all pass.
 
 - **2026-08-24** — Code Scan Improvements: fixed all 10 findings from the code-scanner
   audit on `fix/code-scan-improvements`, one commit per item so each is independently
