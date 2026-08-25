@@ -133,6 +133,15 @@ async function assertConsoleExists(consoleId: string) {
   }
 }
 
+async function assertGenresExist(genreIds: string[]) {
+  if (genreIds.length === 0) return;
+
+  const count = await db.genre.count({ where: { id: { in: genreIds } } });
+  if (count !== genreIds.length) {
+    throw new AppError("One or more selected genres no longer exist");
+  }
+}
+
 export async function getConsoleGames(
   consoleId: string,
   options: { search?: string; sort?: GameSortKey; skip?: number; take?: number } = {}
@@ -180,6 +189,7 @@ export async function getConsoleGames(
 export async function createGame(input: GameFormInput): Promise<GameListItem> {
   const data = buildGameData(input);
   await assertConsoleExists(data.consoleId);
+  await assertGenresExist(data.genreIds);
 
   const game = await db.game.create({
     data: {
@@ -209,6 +219,7 @@ export async function createGame(input: GameFormInput): Promise<GameListItem> {
 export async function updateGame(id: string, input: GameFormInput): Promise<GameListItem> {
   const data = buildGameData(input);
   await assertConsoleExists(data.consoleId);
+  await assertGenresExist(data.genreIds);
 
   const game = await db.$transaction(async (tx) => {
     await tx.gameGenre.deleteMany({ where: { gameId: id } });
