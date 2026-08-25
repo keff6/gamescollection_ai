@@ -2,15 +2,42 @@
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- What does success look like? -->
+Fix the findings from the 2026-08-24 code-scanner audit (security, correctness,
+performance, code-quality) — 10 items, one commit ("checkpoint") per item so each is
+easy to review independently. One deferred (see Notes).
+
+1. Fix open redirect via unvalidated `callbackUrl` (`app/login/page.tsx`,
+   `components/auth/LoginForm.tsx`) — shared `lib/safe-redirect.ts` helper.
+2. Fix `GamesList.tsx` `handleUpdated` not re-checking search match / adjusting
+   `total` after an edit (desyncs the filtered list from an active search).
+3. Extract duplicated `ActionResult<T>` + `requireAuth()` into `lib/server-action.ts`,
+   used by all four Server Action files.
+4. Consolidate the four duplicated `toXErrorMessage()` helpers into one
+   `lib/error-utils.ts`.
+5. Guard the shared error-message helper so raw Prisma driver errors don't leak to
+   the user-facing toast/inline message.
+6. Add a `genreIds` existence check in `lib/games.ts` before create/update, mirroring
+   the existing `assertConsoleExists`.
+7. Wrap `deleteBrand`/`deleteConsole`'s check-then-delete in `db.$transaction` to
+   close the TOCTOU race.
+8. Split `GenrePicker` and `SagaTagInput` out of `GameFormDialog.tsx`.
+9. Extract a shared `parseYearOrInfinity` utility (deduped from `game-utils.ts` /
+   `console-utils.ts`).
+10. Apply `normalizeGenerationValue` at read time (`lib/consoles.ts`) so legacy
+    bare-digit `generation` values display correctly on the read-only console card,
+    not just in the edit form.
 
 ## Notes
 
-<!-- Additional context, constraints, or details from spec -->
+Deferred, NOT part of this branch: migrating `Game.year`/`Console.year` from string
+to `Int` to make games pagination a real DB-level `skip`/`take` instead of an
+in-memory fetch-all-then-slice. Requires a Prisma migration against the Neon dev DB
+and touches sort logic in multiple files — explicitly deferred per user decision on
+2026-08-24, flagged here as a future follow-up.
 
 ## History
 
