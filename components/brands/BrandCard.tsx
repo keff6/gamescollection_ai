@@ -16,7 +16,7 @@ export function BrandCard({
   onDeleteClick: (brand: BrandWithConsoleCount) => void;
 }) {
   return (
-    <div className="relative rounded-xl bg-card p-6 ring-1 ring-foreground/10 transition-colors hover:bg-muted">
+    <div className="relative rounded-xl bg-card p-6 ring-1 ring-foreground/30 transition-colors hover:bg-muted">
       <Link
         href={`/brands/${brand.id}/consoles`}
         className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
@@ -28,7 +28,7 @@ export function BrandCard({
       </Link>
 
       {isLoggedIn && (
-        <div className="absolute top-4 right-4 flex gap-1">
+        <div className="absolute top-4 right-4 flex gap-2">
           <BrandFormDialog
             brand={brand}
             onSuccess={onUpdated}
@@ -36,7 +36,7 @@ export function BrandCard({
               <Button
                 type="button"
                 variant="ghost"
-                size="icon-sm"
+                size="icon"
                 aria-label={`Edit ${brand.name}`}
               >
                 <PencilIcon />
@@ -46,7 +46,7 @@ export function BrandCard({
           <Button
             type="button"
             variant="ghost"
-            size="icon-sm"
+            size="icon"
             aria-label={`Delete ${brand.name}`}
             onClick={() => onDeleteClick(brand)}
           >

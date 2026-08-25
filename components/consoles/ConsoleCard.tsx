@@ -22,7 +22,7 @@ export function ConsoleCard({
   onDeleteClick: (consoleItem: ConsoleWithGameCount) => void;
 }) {
   return (
-    <div className="flex flex-col gap-4 rounded-xl bg-card p-6 ring-1 ring-foreground/10">
+    <div className="flex flex-col gap-4 rounded-xl bg-card p-6 ring-1 ring-foreground/30">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <Gamepad2 className="h-6 w-6 shrink-0 text-accent" aria-hidden="true" />
@@ -30,7 +30,7 @@ export function ConsoleCard({
         </div>
 
         {isLoggedIn && (
-          <div className="flex shrink-0 gap-1">
+          <div className="flex shrink-0 gap-2">
             <ConsoleFormDialog
               brandId={brandId}
               brands={brands}
@@ -48,7 +48,7 @@ export function ConsoleCard({
                 <Button
                   type="button"
                   variant="ghost"
-                  size="icon-sm"
+                  size="icon"
                   aria-label={`Edit ${consoleItem.name}`}
                 >
                   <PencilIcon />
@@ -58,7 +58,7 @@ export function ConsoleCard({
             <Button
               type="button"
               variant="ghost"
-              size="icon-sm"
+              size="icon"
               aria-label={`Delete ${consoleItem.name}`}
               onClick={() => onDeleteClick(consoleItem)}
             >

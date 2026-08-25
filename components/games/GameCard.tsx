@@ -24,7 +24,7 @@ export function GameCard({
   onDeleteClick: (game: GameListItem) => void;
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-xl bg-card p-5 ring-1 ring-foreground/10">
+    <div className="flex flex-col gap-3 rounded-xl bg-card p-5 ring-1 ring-foreground/30">
       <div className="flex items-start justify-between gap-4">
         <p className="text-lg font-bold text-foreground">{game.title}</p>
         <div className="flex shrink-0 items-center gap-1">
@@ -34,7 +34,7 @@ export function GameCard({
             </Badge>
           )}
           {isLoggedIn && (
-            <>
+            <div className="flex items-center gap-2">
               <GameFormDialog
                 consoleId={consoleId}
                 consoles={consoles}
@@ -45,7 +45,7 @@ export function GameCard({
                   <Button
                     type="button"
                     variant="ghost"
-                    size="icon-sm"
+                    size="icon"
                     aria-label={`Edit ${game.title}`}
                   >
                     <PencilIcon />
@@ -55,13 +55,13 @@ export function GameCard({
               <Button
                 type="button"
                 variant="ghost"
-                size="icon-sm"
+                size="icon"
                 aria-label={`Delete ${game.title}`}
                 onClick={() => onDeleteClick(game)}
               >
                 <Trash2Icon className="text-destructive" />
               </Button>
-            </>
+            </div>
           )}
         </div>
       </div>

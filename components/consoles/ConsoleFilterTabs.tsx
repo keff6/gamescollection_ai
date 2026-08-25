@@ -32,7 +32,7 @@ export function ConsoleFilterTabs({
             className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
               isActive
                 ? "bg-accent text-accent-foreground"
-                : "text-muted-foreground ring-1 ring-foreground/10 hover:text-foreground"
+                : "text-muted-foreground ring-1 ring-foreground/30 hover:text-foreground"
             }`}
           >
             {filter.label}

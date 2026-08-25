@@ -60,6 +60,7 @@ export function GenrePicker({
                   type="button"
                   onClick={() => removeGenre(genreId)}
                   aria-label={`Remove ${genre.name}`}
+                  className="-m-1 rounded-full p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
                 >
                   <X className="size-3" />
                 </button>

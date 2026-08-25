@@ -73,7 +73,7 @@ export function ConsoleFormDialog({
   const isEdit = consoleValues !== undefined;
   const [open, setOpen] = useState(false);
   const [values, setValues] = useState<Omit<ConsoleFormValues, "id">>(
-    consoleValues ?? defaultValues(brandId)
+    consoleValues ?? defaultValues(brandId),
   );
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -128,116 +128,134 @@ export function ConsoleFormDialog({
         <form
           onSubmit={handleSubmit}
           noValidate
-          className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto pr-1"
+          className="flex flex-col gap-4"
         >
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="console-name">Name *</Label>
-            <Input
-              id="console-name"
-              name="name"
-              placeholder="Enter console name"
-              value={values.name}
-              onChange={(event) =>
-                setValues((current) => ({ ...current, name: event.target.value }))
-              }
-              maxLength={60}
-              required
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="console-short-name">Short Name *</Label>
-            <Input
-              id="console-short-name"
-              name="shortName"
-              placeholder="Enter console short name or abbreviation"
-              value={values.shortName}
-              onChange={(event) =>
-                setValues((current) => ({ ...current, shortName: event.target.value }))
-              }
-              maxLength={30}
-              required
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="console-brand">Brand *</Label>
-            <Select
-              value={values.brandId}
-              onValueChange={(value) =>
-                setValues((current) => ({ ...current, brandId: value }))
-              }
-            >
-              <SelectTrigger id="console-brand" className="w-full">
-                <SelectValue placeholder="Select brand" />
-              </SelectTrigger>
-              <SelectContent>
-                {brands.map((brand) => (
-                  <SelectItem key={brand.id} value={brand.id}>
-                    {brand.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+          <div className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto overflow-x-hidden pr-1">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="console-year">Year</Label>
+              <Label htmlFor="console-name">Name *</Label>
+              <Input
+                id="console-name"
+                name="name"
+                placeholder="Enter console name"
+                value={values.name}
+                onChange={(event) =>
+                  setValues((current) => ({
+                    ...current,
+                    name: event.target.value,
+                  }))
+                }
+                maxLength={60}
+                required
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="console-short-name">Short Name *</Label>
+              <Input
+                id="console-short-name"
+                name="shortName"
+                placeholder="Enter console short name or abbreviation"
+                value={values.shortName}
+                onChange={(event) =>
+                  setValues((current) => ({
+                    ...current,
+                    shortName: event.target.value,
+                  }))
+                }
+                maxLength={30}
+                required
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="console-brand">Brand *</Label>
               <Select
-                value={values.year}
+                value={values.brandId}
                 onValueChange={(value) =>
-                  setValues((current) => ({ ...current, year: value }))
+                  setValues((current) => ({ ...current, brandId: value }))
                 }
               >
-                <SelectTrigger id="console-year" className="w-full">
-                  <SelectValue placeholder="Enter console release year..." />
+                <SelectTrigger id="console-brand" className="w-full">
+                  <SelectValue placeholder="Select brand" />
                 </SelectTrigger>
                 <SelectContent>
-                  {YEAR_OPTIONS.map((year) => (
-                    <SelectItem key={year} value={year}>
-                      {year}
+                  {brands.map((brand) => (
+                    <SelectItem key={brand.id} value={brand.id}>
+                      {brand.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="console-generation">Generation</Label>
-              <Select
-                value={values.generation}
-                onValueChange={(value) =>
-                  setValues((current) => ({ ...current, generation: value }))
-                }
-              >
-                <SelectTrigger id="console-generation" className="w-full">
-                  <SelectValue placeholder="Select console generation" />
-                </SelectTrigger>
-                <SelectContent>
-                  {CONSOLE_GENERATIONS.map((generation) => (
-                    <SelectItem key={generation.value} value={generation.text}>
-                      {generation.text}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="console-year">Year</Label>
+                <Select
+                  value={values.year}
+                  onValueChange={(value) =>
+                    setValues((current) => ({ ...current, year: value }))
+                  }
+                >
+                  <SelectTrigger id="console-year" className="w-full">
+                    <SelectValue placeholder="Enter console release year..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {YEAR_OPTIONS.map((year) => (
+                      <SelectItem key={year} value={year}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="console-generation">Generation</Label>
+                <Select
+                  value={values.generation}
+                  onValueChange={(value) =>
+                    setValues((current) => ({ ...current, generation: value }))
+                  }
+                >
+                  <SelectTrigger id="console-generation" className="w-full">
+                    <SelectValue placeholder="Select console generation" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CONSOLE_GENERATIONS.map((generation) => (
+                      <SelectItem
+                        key={generation.value}
+                        value={generation.text}
+                      >
+                        {generation.text}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+
+            <label className="flex items-center gap-2 text-sm text-foreground">
+              <Checkbox
+                checked={values.isPortable}
+                onCheckedChange={(checked) =>
+                  setValues((current) => ({
+                    ...current,
+                    isPortable: checked === true,
+                  }))
+                }
+              />
+              Is Portable
+            </label>
+
+            {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
-
-          <label className="flex items-center gap-2 text-sm text-foreground">
-            <Checkbox
-              checked={values.isPortable}
-              onCheckedChange={(checked) =>
-                setValues((current) => ({ ...current, isPortable: checked === true }))
-              }
-            />
-            Is Portable
-          </label>
-
-          {error && <p className="text-sm text-destructive">{error}</p>}
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={isSaving}>

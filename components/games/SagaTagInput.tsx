@@ -43,7 +43,7 @@ export function SagaTagInput({
   return (
     <div className="flex flex-col gap-1.5">
       <Label htmlFor="game-saga">Sagas / Tags</Label>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="flex gap-2">
           <Input
             id="game-saga"
@@ -71,6 +71,7 @@ export function SagaTagInput({
                 type="button"
                 onClick={() => removeTag(tag)}
                 aria-label={`Remove ${tag}`}
+                className="-m-1 rounded-full p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
               >
                 <X className="size-3" />
               </button>

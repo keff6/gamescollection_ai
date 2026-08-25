@@ -1,16 +1,40 @@
-# Current Feature
+# Current Feature: UI Contrast, Modal & Responsiveness Fixes
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- What does success look like? -->
+Fix UI issues found by a live (Playwright-driven) UI review focused on modal
+appearance, responsiveness, and color/contrast:
+
+1. Modal backdrop overlay is nearly invisible (`bg-black/10` in both
+   `components/ui/dialog.tsx` and `components/ui/alert-dialog.tsx`) — background
+   content stays fully readable behind every modal, including the destructive
+   delete-confirmation dialog. Raise opacity to a normal level (e.g. `/50`).
+2. Card/input border contrast fails WCAG (`--border` computed ~1.21:1 against
+   `--card` in `app/globals.css`, needs 3:1 for UI components) — cards and
+   unfocused inputs visually blend into the background.
+3. `SagaTagInput` (`components/games/SagaTagInput.tsx`)'s `grid-cols-2` layout
+   has no responsive breakpoint — at 375px the tag input's placeholder text is
+   truncated and the row forces horizontal scroll on the whole Game modal.
+4. All three form dialogs (`BrandFormDialog.tsx`, `ConsoleFormDialog.tsx`,
+   `GameFormDialog.tsx`) share an identical `overflow-y-auto` scroll container
+   with no `overflow-x-hidden` — browsers auto-compute `overflow-x: auto` in
+   that case, so even a short 2-field form (Add Brand) shows phantom vertical
+   *and* horizontal scrollbars.
+5. Edit/Delete icon buttons on Brand/Console/Game cards are 28×28px with only
+   4px gap between them — clears the 24px WCAG minimum but is tight for a
+   destructive action sitting next to an edit action; bump touch target size.
 
 ## Notes
 
-<!-- Additional context, constraints, or details from spec -->
+- Found via a live UI-reviewer pass (Playwright MCP) against the real dev
+  server, not just static code reading — confirmed with actual computed
+  styles/contrast ratios and screenshots at desktop/mobile widths.
+- Item 6 (delete button text ~4.7:1 marginal-pass contrast) was flagged but
+  needs no fix now — noted only in case the palette shifts later.
 
 ## History
 
