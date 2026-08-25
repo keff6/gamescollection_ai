@@ -76,6 +76,13 @@ export function GamesList({
       setTotalGames((prev) => Math.max(0, prev - 1));
       return;
     }
+
+    if (!matchesSearch(game)) {
+      setGames((prev) => prev.filter((current) => current.id !== game.id));
+      setTotal((prev) => Math.max(0, prev - 1));
+      return;
+    }
+
     setGames((prev) =>
       sortGames(
         prev.map((current) => (current.id === game.id ? game : current)),
