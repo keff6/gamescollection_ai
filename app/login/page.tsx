@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { GamepadIcon } from "@/components/layout/Navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { getSafeRedirectPath } from "@/lib/safe-redirect";
 
 export default async function LoginPage({
   searchParams,
@@ -13,7 +14,7 @@ export default async function LoginPage({
   const { callbackUrl } = await searchParams;
 
   if (session) {
-    redirect(typeof callbackUrl === "string" ? callbackUrl : "/");
+    redirect(getSafeRedirectPath(callbackUrl));
   }
 
   return (
