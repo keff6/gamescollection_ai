@@ -1,5 +1,6 @@
 import { ZodError } from "zod";
 import { describe, expect, it } from "vitest";
+import { AppError } from "@/lib/app-error";
 import {
   brandNameSchema,
   brandOriginSchema,
@@ -96,8 +97,14 @@ describe("toBrandErrorMessage", () => {
     expect(toBrandErrorMessage(error, "fallback")).toBe("fallback");
   });
 
-  it("uses a plain Error's message", () => {
-    expect(toBrandErrorMessage(new Error("boom"), "fallback")).toBe("boom");
+  it("uses an AppError's message", () => {
+    expect(toBrandErrorMessage(new AppError("Brand not found"), "fallback")).toBe(
+      "Brand not found"
+    );
+  });
+
+  it("falls back for a plain Error (not an AppError), to avoid leaking internal details", () => {
+    expect(toBrandErrorMessage(new Error("boom"), "fallback")).toBe("fallback");
   });
 
   it("falls back for a non-Error value", () => {

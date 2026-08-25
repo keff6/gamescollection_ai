@@ -1,6 +1,5 @@
 "use server";
 
-import { auth } from "@/auth";
 import { toGameErrorMessage } from "@/lib/game-utils";
 import {
   GAMES_PAGE_SIZE,
@@ -12,18 +11,7 @@ import {
   type GameListItem,
   type GameSortKey,
 } from "@/lib/games";
-
-type ActionResult<T> =
-  | { success: true; data: T }
-  | { success: false; error: string };
-
-async function requireAuth(): Promise<ActionResult<never> | null> {
-  const session = await auth();
-  if (!session) {
-    return { success: false, error: "You must be logged in to do that." };
-  }
-  return null;
-}
+import { requireAuth, type ActionResult } from "@/lib/server-action";
 
 export async function loadMoreGames(
   consoleId: string,

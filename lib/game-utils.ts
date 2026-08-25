@@ -1,4 +1,6 @@
-import { ZodError, z } from "zod";
+import { z } from "zod";
+import { toEntityErrorMessage } from "@/lib/error-utils";
+import { parseYearOrInfinity } from "@/lib/year-utils";
 
 export type MediaStatus = "incomplete" | "complete" | "new" | "digital";
 
@@ -26,15 +28,10 @@ export interface GameListItem {
   isFinished: boolean;
 }
 
-function parseYear(year: string | null) {
-  const parsed = parseInt(year ?? "", 10);
-  return Number.isNaN(parsed) ? Infinity : parsed;
-}
-
 export function sortGames(games: GameListItem[], sort: GameSortKey) {
   const sorted = [...games];
   if (sort === "year") {
-    sorted.sort((a, b) => parseYear(a.year) - parseYear(b.year));
+    sorted.sort((a, b) => parseYearOrInfinity(a.year) - parseYearOrInfinity(b.year));
   } else if (sort === "rating") {
     sorted.sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1));
   } else {
@@ -167,11 +164,5 @@ export function isDuplicateSagaTag(saga: string[], candidate: string): boolean {
 }
 
 export function toGameErrorMessage(error: unknown, fallback: string): string {
-  if (error instanceof ZodError) {
-    return error.issues[0]?.message ?? fallback;
-  }
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return fallback;
+  return toEntityErrorMessage(error, fallback);
 }

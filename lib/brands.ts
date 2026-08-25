@@ -1,3 +1,4 @@
+import { AppError } from "@/lib/app-error";
 import { db } from "@/lib/prisma";
 import { brandNameSchema, brandOriginSchema, type BrandOption } from "@/lib/brand-utils";
 
@@ -69,22 +70,24 @@ export async function updateBrand(
 }
 
 export async function deleteBrand(id: string): Promise<void> {
-  const brand = await db.brand.findUnique({
-    where: { id },
-    include: { _count: { select: { consoles: true } } },
+  await db.$transaction(async (tx) => {
+    const brand = await tx.brand.findUnique({
+      where: { id },
+      include: { _count: { select: { consoles: true } } },
+    });
+
+    if (!brand) {
+      throw new AppError("Brand not found");
+    }
+
+    if (brand._count.consoles > 0) {
+      throw new AppError(
+        `Can't delete "${brand.name}" — it still has ${brand._count.consoles} console${
+          brand._count.consoles === 1 ? "" : "s"
+        }. Remove or reassign them first.`
+      );
+    }
+
+    await tx.brand.delete({ where: { id } });
   });
-
-  if (!brand) {
-    throw new Error("Brand not found");
-  }
-
-  if (brand._count.consoles > 0) {
-    throw new Error(
-      `Can't delete "${brand.name}" — it still has ${brand._count.consoles} console${
-        brand._count.consoles === 1 ? "" : "s"
-      }. Remove or reassign them first.`
-    );
-  }
-
-  await db.brand.delete({ where: { id } });
 }

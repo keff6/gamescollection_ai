@@ -1,4 +1,6 @@
-import { ZodError, z } from "zod";
+import { z } from "zod";
+import { toEntityErrorMessage } from "@/lib/error-utils";
+import { parseYearOrInfinity } from "@/lib/year-utils";
 
 export interface ConsoleGeneration {
   value: number;
@@ -87,20 +89,11 @@ export const consoleFormSchema = z.object({
 export function sortConsolesByYear<T extends { year: string | null }>(
   consoles: T[]
 ): T[] {
-  const parseYear = (year: string | null) => {
-    const parsed = parseInt(year ?? "", 10);
-    return Number.isNaN(parsed) ? Infinity : parsed;
-  };
-
-  return [...consoles].sort((a, b) => parseYear(a.year) - parseYear(b.year));
+  return [...consoles].sort(
+    (a, b) => parseYearOrInfinity(a.year) - parseYearOrInfinity(b.year)
+  );
 }
 
 export function toConsoleErrorMessage(error: unknown, fallback: string): string {
-  if (error instanceof ZodError) {
-    return error.issues[0]?.message ?? fallback;
-  }
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return fallback;
+  return toEntityErrorMessage(error, fallback);
 }

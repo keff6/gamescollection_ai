@@ -76,7 +76,7 @@ export function ConsoleCard({
         <div>
           <p className="text-xs font-medium text-muted-foreground">GENERATION</p>
           <p className="mt-1 text-sm text-foreground">
-            {consoleItem.generation ?? "—"}
+            {normalizeGenerationValue(consoleItem.generation) || "—"}
           </p>
         </div>
       </div>

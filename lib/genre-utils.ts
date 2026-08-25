@@ -1,4 +1,5 @@
-import { ZodError, z } from "zod";
+import { z } from "zod";
+import { toEntityErrorMessage } from "@/lib/error-utils";
 
 export interface GenreOption {
   id: string;
@@ -27,11 +28,5 @@ export function isDuplicateGenreName(
 }
 
 export function toGenreErrorMessage(error: unknown, fallback: string): string {
-  if (error instanceof ZodError) {
-    return error.issues[0]?.message ?? fallback;
-  }
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return fallback;
+  return toEntityErrorMessage(error, fallback);
 }

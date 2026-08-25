@@ -1,4 +1,5 @@
 import { Prisma } from "@/generated/prisma/client";
+import { AppError } from "@/lib/app-error";
 import { db } from "@/lib/prisma";
 import {
   gameConsoleIdSchema,
@@ -128,7 +129,16 @@ async function assertConsoleExists(consoleId: string) {
     select: { id: true },
   });
   if (!consoleItem) {
-    throw new Error("Selected console doesn't exist");
+    throw new AppError("Selected console doesn't exist");
+  }
+}
+
+async function assertGenresExist(genreIds: string[]) {
+  if (genreIds.length === 0) return;
+
+  const count = await db.genre.count({ where: { id: { in: genreIds } } });
+  if (count !== genreIds.length) {
+    throw new AppError("One or more selected genres no longer exist");
   }
 }
 
@@ -179,6 +189,7 @@ export async function getConsoleGames(
 export async function createGame(input: GameFormInput): Promise<GameListItem> {
   const data = buildGameData(input);
   await assertConsoleExists(data.consoleId);
+  await assertGenresExist(data.genreIds);
 
   const game = await db.game.create({
     data: {
@@ -208,6 +219,7 @@ export async function createGame(input: GameFormInput): Promise<GameListItem> {
 export async function updateGame(id: string, input: GameFormInput): Promise<GameListItem> {
   const data = buildGameData(input);
   await assertConsoleExists(data.consoleId);
+  await assertGenresExist(data.genreIds);
 
   const game = await db.$transaction(async (tx) => {
     await tx.gameGenre.deleteMany({ where: { gameId: id } });

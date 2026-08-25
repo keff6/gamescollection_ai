@@ -1,5 +1,6 @@
 import { ZodError } from "zod";
 import { describe, expect, it } from "vitest";
+import { AppError } from "@/lib/app-error";
 import {
   gameConsoleIdSchema,
   gameDeveloperSchema,
@@ -249,8 +250,14 @@ describe("toGameErrorMessage", () => {
     expect(toGameErrorMessage(error, "fallback")).toBe("fallback");
   });
 
-  it("uses a plain Error's message", () => {
-    expect(toGameErrorMessage(new Error("boom"), "fallback")).toBe("boom");
+  it("uses an AppError's message", () => {
+    expect(
+      toGameErrorMessage(new AppError("Selected console doesn't exist"), "fallback")
+    ).toBe("Selected console doesn't exist");
+  });
+
+  it("falls back for a plain Error (not an AppError), to avoid leaking internal details", () => {
+    expect(toGameErrorMessage(new Error("boom"), "fallback")).toBe("fallback");
   });
 
   it("falls back for a non-Error value", () => {
