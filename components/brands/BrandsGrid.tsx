@@ -71,7 +71,7 @@ export function BrandsGrid({
       </div>
 
       {brands.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-2 rounded-xl bg-card py-16 text-center ring-1 ring-foreground/10">
+        <div className="flex flex-1 flex-col items-center justify-center gap-2 rounded-xl bg-card py-16 text-center ring-1 ring-foreground/30">
           <p className="text-lg font-semibold text-foreground">No brands yet</p>
           <p className="text-sm text-muted-foreground">
             {isLoggedIn

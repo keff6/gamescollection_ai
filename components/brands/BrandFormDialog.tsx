@@ -93,34 +93,40 @@ export function BrandFormDialog({
         <form
           onSubmit={handleSubmit}
           noValidate
-          className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto pr-1"
+          className="flex flex-col gap-4"
         >
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="brand-name">Name *</Label>
-            <Input
-              id="brand-name"
-              name="name"
-              placeholder="e.g. Nintendo"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              maxLength={30}
-              required
-            />
+          <div className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto overflow-x-hidden pr-1">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="brand-name">Name *</Label>
+              <Input
+                id="brand-name"
+                name="name"
+                placeholder="e.g. Nintendo"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                maxLength={30}
+                required
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="brand-origin">Origin</Label>
+              <Input
+                id="brand-origin"
+                name="origin"
+                placeholder="e.g. Japan"
+                value={origin}
+                onChange={(event) => setOrigin(event.target.value)}
+                maxLength={30}
+              />
+            </div>
+            {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="brand-origin">Origin</Label>
-            <Input
-              id="brand-origin"
-              name="origin"
-              placeholder="e.g. Japan"
-              value={origin}
-              onChange={(event) => setOrigin(event.target.value)}
-              maxLength={30}
-            />
-          </div>
-          {error && <p className="text-sm text-destructive">{error}</p>}
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={isSaving}>

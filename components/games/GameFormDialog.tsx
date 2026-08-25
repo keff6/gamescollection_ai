@@ -3,7 +3,10 @@
 import { PlusIcon } from "lucide-react";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { toast } from "sonner";
-import { createGameAction, updateGameAction } from "@/app/consoles/[consoleId]/games/actions";
+import {
+  createGameAction,
+  updateGameAction,
+} from "@/app/consoles/[consoleId]/games/actions";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -112,7 +115,7 @@ export function GameFormDialog({
   const isEdit = game !== undefined;
   const [open, setOpen] = useState(false);
   const [values, setValues] = useState<Omit<GameFormValues, "id">>(
-    game ?? defaultValues(consoleId)
+    game ?? defaultValues(consoleId),
   );
   const [sagaInput, setSagaInput] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -187,216 +190,244 @@ export function GameFormDialog({
         <form
           onSubmit={handleSubmit}
           noValidate
-          className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto pr-1"
+          className="flex flex-col gap-4"
         >
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="game-title">Title *</Label>
-            <Input
-              id="game-title"
-              name="title"
-              placeholder="Enter game title"
-              value={values.title}
-              maxLength={80}
-              onChange={(event) =>
-                setValues((current) => ({ ...current, title: event.target.value }))
-              }
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
+          <div className="flex max-h-[70vh] flex-col gap-4 overflow-y-auto overflow-x-hidden pr-1">
             <div className="flex flex-col gap-1.5">
-              <Label htmlFor="game-console">Console *</Label>
-              <Select
-                value={values.consoleId}
-                onValueChange={(value) =>
-                  setValues((current) => ({ ...current, consoleId: value }))
-                }
-              >
-                <SelectTrigger id="game-console" className="w-full">
-                  <SelectValue placeholder="Select console" />
-                </SelectTrigger>
-                <SelectContent>
-                  {consoles.map((consoleOption) => (
-                    <SelectItem key={consoleOption.id} value={consoleOption.id}>
-                      {consoleOption.name} ({consoleOption.brandName})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="game-year">Year</Label>
-              <Select
-                value={values.year}
-                onValueChange={(value) =>
-                  setValues((current) => ({ ...current, year: value }))
-                }
-              >
-                <SelectTrigger id="game-year" className="w-full">
-                  <SelectValue placeholder="Enter release year (America)" />
-                </SelectTrigger>
-                <SelectContent>
-                  {YEAR_OPTIONS.map((year) => (
-                    <SelectItem key={year} value={year}>
-                      {year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="game-developer">Developer</Label>
+              <Label htmlFor="game-title">Title *</Label>
               <Input
-                id="game-developer"
-                name="developer"
-                placeholder="Enter game developer"
-                value={values.developer}
-                maxLength={50}
+                id="game-title"
+                name="title"
+                placeholder="Enter game title"
+                value={values.title}
+                maxLength={80}
                 onChange={(event) =>
-                  setValues((current) => ({ ...current, developer: event.target.value }))
+                  setValues((current) => ({
+                    ...current,
+                    title: event.target.value,
+                  }))
                 }
+                required
               />
             </div>
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="game-publisher">Publisher</Label>
-              <Input
-                id="game-publisher"
-                name="publisher"
-                placeholder="Enter game publisher"
-                value={values.publisher}
-                maxLength={50}
-                onChange={(event) =>
-                  setValues((current) => ({ ...current, publisher: event.target.value }))
-                }
-              />
-            </div>
-          </div>
 
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="game-rating">Rating (1-10)</Label>
-            <Input
-              id="game-rating"
-              name="rating"
-              type="number"
-              min={1}
-              max={10}
-              placeholder="8"
-              value={values.rating}
-              onChange={(event) =>
-                setValues((current) => ({ ...current, rating: event.target.value }))
-              }
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label>Game media status</Label>
-            <RadioGroup
-              value={values.mediaStatus}
-              onValueChange={(value) =>
-                setValues((current) => ({
-                  ...current,
-                  mediaStatus: value as MediaStatus,
-                }))
-              }
-              className="flex flex-wrap gap-4"
-            >
-              {(
-                [
-                  ["incomplete", "Incomplete"],
-                  ["complete", "Complete (CIB)"],
-                  ["new", "New"],
-                  ["digital", "Digital"],
-                ] as [MediaStatus, string][]
-              ).map(([value, label]) => (
-                <label
-                  key={value}
-                  className="flex items-center gap-2 text-sm text-foreground"
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="game-console">Console *</Label>
+                <Select
+                  value={values.consoleId}
+                  onValueChange={(value) =>
+                    setValues((current) => ({ ...current, consoleId: value }))
+                  }
                 >
-                  <RadioGroupItem value={value} />
-                  {label}
-                </label>
-              ))}
-            </RadioGroup>
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <Label>Game playable status</Label>
-            <div className="flex flex-wrap gap-4">
-              <label className="flex items-center gap-2 text-sm text-foreground">
-                <Checkbox
-                  checked={values.isBacklog}
-                  onCheckedChange={(checked) =>
-                    setValues((current) => ({
-                      ...current,
-                      isBacklog: checked === true,
-                    }))
+                  <SelectTrigger id="game-console" className="w-full">
+                    <SelectValue placeholder="Select console" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {consoles.map((consoleOption) => (
+                      <SelectItem
+                        key={consoleOption.id}
+                        value={consoleOption.id}
+                      >
+                        {consoleOption.name} ({consoleOption.brandName})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="game-year">Year</Label>
+                <Select
+                  value={values.year}
+                  onValueChange={(value) =>
+                    setValues((current) => ({ ...current, year: value }))
                   }
-                />
-                Is on Backlog
-              </label>
-              <label className="flex items-center gap-2 text-sm text-foreground">
-                <Checkbox
-                  checked={values.isPlaying}
-                  onCheckedChange={(checked) =>
-                    setValues((current) => ({
-                      ...current,
-                      isPlaying: checked === true,
-                    }))
-                  }
-                />
-                Currently Playing
-              </label>
-              <label className="flex items-center gap-2 text-sm text-foreground">
-                <Checkbox
-                  checked={values.isFinished}
-                  onCheckedChange={(checked) =>
-                    setValues((current) => ({
-                      ...current,
-                      isFinished: checked === true,
-                    }))
-                  }
-                />
-                Finished
-              </label>
+                >
+                  <SelectTrigger id="game-year" className="w-full">
+                    <SelectValue placeholder="Enter release year (America)" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {YEAR_OPTIONS.map((year) => (
+                      <SelectItem key={year} value={year}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-          </div>
 
-          <div className="flex flex-col gap-1.5">
-            <Label htmlFor="game-notes">Notes</Label>
-            <Textarea
-              id="game-notes"
-              name="notes"
-              placeholder="Personal notes about this game..."
-              value={values.notes}
-              maxLength={200}
-              onChange={(event) =>
-                setValues((current) => ({ ...current, notes: event.target.value }))
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="game-developer">Developer</Label>
+                <Input
+                  id="game-developer"
+                  name="developer"
+                  placeholder="Enter game developer"
+                  value={values.developer}
+                  maxLength={50}
+                  onChange={(event) =>
+                    setValues((current) => ({
+                      ...current,
+                      developer: event.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="game-publisher">Publisher</Label>
+                <Input
+                  id="game-publisher"
+                  name="publisher"
+                  placeholder="Enter game publisher"
+                  value={values.publisher}
+                  maxLength={50}
+                  onChange={(event) =>
+                    setValues((current) => ({
+                      ...current,
+                      publisher: event.target.value,
+                    }))
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="game-rating">Rating (1-10)</Label>
+              <Input
+                id="game-rating"
+                name="rating"
+                type="number"
+                min={1}
+                max={10}
+                placeholder="8"
+                value={values.rating}
+                onChange={(event) =>
+                  setValues((current) => ({
+                    ...current,
+                    rating: event.target.value,
+                  }))
+                }
+              />
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label>Game media status</Label>
+              <RadioGroup
+                value={values.mediaStatus}
+                onValueChange={(value) =>
+                  setValues((current) => ({
+                    ...current,
+                    mediaStatus: value as MediaStatus,
+                  }))
+                }
+                className="flex flex-wrap gap-4"
+              >
+                {(
+                  [
+                    ["incomplete", "Incomplete"],
+                    ["complete", "Complete (CIB)"],
+                    ["new", "New"],
+                    ["digital", "Digital"],
+                  ] as [MediaStatus, string][]
+                ).map(([value, label]) => (
+                  <label
+                    key={value}
+                    className="flex items-center gap-2 text-sm text-foreground"
+                  >
+                    <RadioGroupItem value={value} />
+                    {label}
+                  </label>
+                ))}
+              </RadioGroup>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label>Game playable status</Label>
+              <div className="flex flex-wrap gap-4">
+                <label className="flex items-center gap-2 text-sm text-foreground">
+                  <Checkbox
+                    checked={values.isBacklog}
+                    onCheckedChange={(checked) =>
+                      setValues((current) => ({
+                        ...current,
+                        isBacklog: checked === true,
+                      }))
+                    }
+                  />
+                  Is on Backlog
+                </label>
+                <label className="flex items-center gap-2 text-sm text-foreground">
+                  <Checkbox
+                    checked={values.isPlaying}
+                    onCheckedChange={(checked) =>
+                      setValues((current) => ({
+                        ...current,
+                        isPlaying: checked === true,
+                      }))
+                    }
+                  />
+                  Currently Playing
+                </label>
+                <label className="flex items-center gap-2 text-sm text-foreground">
+                  <Checkbox
+                    checked={values.isFinished}
+                    onCheckedChange={(checked) =>
+                      setValues((current) => ({
+                        ...current,
+                        isFinished: checked === true,
+                      }))
+                    }
+                  />
+                  Finished
+                </label>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="game-notes">Notes</Label>
+              <Textarea
+                id="game-notes"
+                name="notes"
+                placeholder="Personal notes about this game..."
+                value={values.notes}
+                maxLength={200}
+                onChange={(event) =>
+                  setValues((current) => ({
+                    ...current,
+                    notes: event.target.value,
+                  }))
+                }
+              />
+            </div>
+
+            <GenrePicker
+              genres={genres}
+              selectedIds={values.genreIds}
+              onChange={(genreIds) =>
+                setValues((current) => ({ ...current, genreIds }))
               }
             />
+
+            <SagaTagInput
+              value={sagaInput}
+              onValueChange={setSagaInput}
+              tags={values.saga}
+              onTagsChange={(saga) =>
+                setValues((current) => ({ ...current, saga }))
+              }
+              onError={setError}
+            />
+
+            {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
-
-          <GenrePicker
-            genres={genres}
-            selectedIds={values.genreIds}
-            onChange={(genreIds) => setValues((current) => ({ ...current, genreIds }))}
-          />
-
-          <SagaTagInput
-            value={sagaInput}
-            onValueChange={setSagaInput}
-            tags={values.saga}
-            onTagsChange={(saga) => setValues((current) => ({ ...current, saga }))}
-            onError={setError}
-          />
-
-          {error && <p className="text-sm text-destructive">{error}</p>}
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+            >
               Cancel
             </Button>
             <Button type="submit" disabled={isSaving}>

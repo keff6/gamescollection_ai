@@ -13,7 +13,7 @@ export default function AdminGenresLoading() {
         <SkeletonBlock className="h-8 w-28 rounded-lg" />
       </div>
 
-      <div className="flex flex-col gap-2 rounded-xl bg-card p-4 ring-1 ring-foreground/10">
+      <div className="flex flex-col gap-2 rounded-xl bg-card p-4 ring-1 ring-foreground/30">
         {Array.from({ length: 6 }).map((_, i) => (
           <SkeletonBlock key={i} className="h-8 rounded-md" />
         ))}
