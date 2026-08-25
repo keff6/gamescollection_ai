@@ -152,22 +152,24 @@ export async function updateConsole(
 }
 
 export async function deleteConsole(id: string): Promise<void> {
-  const consoleItem = await db.console.findUnique({
-    where: { id },
-    include: { _count: { select: { games: true } } },
+  await db.$transaction(async (tx) => {
+    const consoleItem = await tx.console.findUnique({
+      where: { id },
+      include: { _count: { select: { games: true } } },
+    });
+
+    if (!consoleItem) {
+      throw new AppError("Console not found");
+    }
+
+    if (consoleItem._count.games > 0) {
+      throw new AppError(
+        `Can't delete "${consoleItem.name}" — it still has ${consoleItem._count.games} game${
+          consoleItem._count.games === 1 ? "" : "s"
+        }. Remove or reassign them first.`
+      );
+    }
+
+    await tx.console.delete({ where: { id } });
   });
-
-  if (!consoleItem) {
-    throw new AppError("Console not found");
-  }
-
-  if (consoleItem._count.games > 0) {
-    throw new AppError(
-      `Can't delete "${consoleItem.name}" — it still has ${consoleItem._count.games} game${
-        consoleItem._count.games === 1 ? "" : "s"
-      }. Remove or reassign them first.`
-    );
-  }
-
-  await db.console.delete({ where: { id } });
 }
