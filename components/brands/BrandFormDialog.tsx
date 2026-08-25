@@ -16,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import type { BrandWithConsoleCount } from "@/lib/brands";
+import { brandFormSchema } from "@/lib/brand-utils";
 
 export interface BrandFormValues {
   id: string;
@@ -53,8 +54,9 @@ export function BrandFormDialog({
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!name.trim()) {
-      setError("Name is required.");
+    const validation = brandFormSchema.safeParse({ name, origin });
+    if (!validation.success) {
+      setError(validation.error.issues[0].message);
       return;
     }
 

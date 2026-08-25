@@ -103,6 +103,18 @@ export const gameSagaTagSchema = z
 
 export const gameSagaSchema = z.array(gameSagaTagSchema).optional().default([]);
 
+export const gameFormSchema = z.object({
+  title: gameTitleSchema,
+  consoleId: gameConsoleIdSchema,
+  genreIds: gameGenreIdsSchema,
+  rating: gameRatingSchema,
+  year: gameYearSchema,
+  developer: gameDeveloperSchema,
+  publisher: gamePublisherSchema,
+  notes: gameNotesSchema,
+  saga: gameSagaSchema,
+});
+
 const GAME_YEAR_START = 1970;
 
 export function getGameYearOptions(

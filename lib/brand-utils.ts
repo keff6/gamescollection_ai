@@ -20,6 +20,11 @@ export const brandOriginSchema = z
   .optional()
   .transform((value) => (value ? value : undefined));
 
+export const brandFormSchema = z.object({
+  name: brandNameSchema,
+  origin: brandOriginSchema,
+});
+
 export function sortBrandsByName<T extends { name: string }>(brands: T[]): T[] {
   return [...brands].sort((a, b) => a.name.localeCompare(b.name));
 }
