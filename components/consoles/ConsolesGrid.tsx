@@ -97,7 +97,7 @@ export function ConsolesGrid({
       <ConsoleFilterTabs brandId={brand.id} active={filter} />
 
       {consoles.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-2 rounded-xl bg-card py-16 text-center ring-1 ring-foreground/30">
+        <div className="flex flex-1 flex-col items-center justify-center gap-2 rounded-xl bg-card py-16 text-center ring-1 ring-divider">
           <p className="text-lg font-semibold text-foreground">No consoles yet</p>
           <p className="text-sm text-muted-foreground">
             {isLoggedIn
@@ -106,7 +106,7 @@ export function ConsolesGrid({
           </p>
         </div>
       ) : filteredConsoles.length === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-2 rounded-xl bg-card py-16 text-center ring-1 ring-foreground/30">
+        <div className="flex flex-1 flex-col items-center justify-center gap-2 rounded-xl bg-card py-16 text-center ring-1 ring-divider">
           <p className="text-lg font-semibold text-foreground">
             No consoles match this filter
           </p>

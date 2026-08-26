@@ -55,7 +55,7 @@ export function GameCard({
   const gameStatusStyle = GAME_STATUS_STYLES[gameStatus];
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl bg-card p-5 ring-1 ring-foreground/30">
+    <div className="flex flex-col gap-3 rounded-xl bg-card p-5 ring-1 ring-divider">
       <div className="flex items-start justify-between gap-4">
         <p className="text-lg font-bold text-foreground">{game.title}</p>
         <div className="flex shrink-0 items-center gap-1">

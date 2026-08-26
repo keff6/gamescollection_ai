@@ -145,7 +145,7 @@ export function GamesList({
       <GamesControls search={search} sort={sort} />
 
       {total === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-2 rounded-xl bg-card py-16 text-center ring-1 ring-foreground/30">
+        <div className="flex flex-1 flex-col items-center justify-center gap-2 rounded-xl bg-card py-16 text-center ring-1 ring-divider">
           <p className="text-lg font-semibold text-foreground">
             {search ? "No games match your search" : "No games yet"}
           </p>

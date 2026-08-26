@@ -187,7 +187,7 @@ export function Navbar({ user = null }: { user?: NavbarUser | null }) {
 
   return (
     <header
-      className={`sticky top-0 z-40 border-b border-border bg-background/85 transition-shadow duration-200 ${
+      className={`sticky top-0 z-40 border-b border-divider bg-background/85 transition-shadow duration-200 ${
         isScrolled ? "shadow-md shadow-black/20" : ""
       }`}
     >

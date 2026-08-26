@@ -22,7 +22,7 @@ export function ConsoleCard({
   onDeleteClick: (consoleItem: ConsoleWithGameCount) => void;
 }) {
   return (
-    <div className="flex flex-col gap-4 rounded-xl bg-card p-6 ring-1 ring-foreground/30">
+    <div className="flex flex-col gap-4 rounded-xl bg-card p-6 ring-1 ring-divider">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <Gamepad2 className="h-6 w-6 shrink-0 text-accent" aria-hidden="true" />

@@ -203,7 +203,7 @@ export function GenresTable({ initialGenres }: { initialGenres: GenreOption[] })
         </Button>
       </div>
 
-      <div className="overflow-hidden rounded-xl bg-card ring-1 ring-foreground/30">
+      <div className="overflow-hidden rounded-xl bg-card ring-1 ring-divider">
         {genres.length === 0 && !isAddingNew ? (
           <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
             <p className="text-lg font-semibold text-foreground">No genres yet</p>

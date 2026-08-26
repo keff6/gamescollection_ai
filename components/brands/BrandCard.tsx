@@ -16,7 +16,7 @@ export function BrandCard({
   onDeleteClick: (brand: BrandWithConsoleCount) => void;
 }) {
   return (
-    <div className="relative rounded-xl bg-card p-6 ring-1 ring-foreground/30 transition-colors hover:bg-muted">
+    <div className="relative rounded-xl bg-card p-6 ring-1 ring-divider transition-colors hover:bg-muted">
       <Link
         href={`/brands/${brand.id}/consoles`}
         className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
