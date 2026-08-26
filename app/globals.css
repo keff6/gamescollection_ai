@@ -6,6 +6,7 @@
 
 :root {
   --background: #0a0e14;
+  --surface: #0d121b;
   --foreground: #f1f5f9;
   --card: #111826;
   --card-foreground: #f1f5f9;
@@ -40,6 +41,7 @@
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);

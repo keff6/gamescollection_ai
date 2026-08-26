@@ -3,7 +3,7 @@
 import { ChevronDownIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { UserMenu } from "@/components/auth/UserMenu";
 import {
   DropdownMenu,
@@ -171,14 +171,26 @@ export function Navbar({ user = null }: { user?: NavbarUser | null }) {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [menuPathname, setMenuPathname] = useState(pathname);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   if (pathname !== menuPathname) {
     setMenuPathname(pathname);
     setIsMenuOpen(false);
   }
 
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 0);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
-    <header className="border-b border-border bg-background">
+    <header
+      className={`sticky top-0 z-40 border-b border-border bg-background/85 transition-shadow duration-200 ${
+        isScrolled ? "shadow-md shadow-black/20" : ""
+      }`}
+    >
       <div className="mx-auto flex h-16 w-full items-center justify-between px-4 sm:px-8">
         <div className="flex items-center gap-8">
           <Link
@@ -236,7 +248,7 @@ export function Navbar({ user = null }: { user?: NavbarUser | null }) {
       </div>
 
       {isMenuOpen && (
-        <div className="border-t border-border px-4 py-4 md:hidden">
+        <div className="absolute inset-x-0 top-full border-t border-border bg-background/95 px-4 py-4 shadow-lg backdrop-blur-sm md:hidden">
           <ul className="flex flex-col gap-1">
             {NAV_LINKS.map((link) => {
               const active = link.isActive(pathname);

@@ -38,7 +38,7 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col">
         <TooltipProvider>
           <Navbar user={user} />
-          <main className="mx-auto flex w-full max-w-330 flex-1 flex-col px-8 py-8">
+          <main className="mx-auto flex w-full max-w-330 flex-1 flex-col bg-surface px-8 py-8">
             {children}
           </main>
           <Footer />
