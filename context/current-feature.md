@@ -6,15 +6,57 @@ Not Started
 
 ## Goals
 
-<!-- What does success look like? -->
-
 ## Notes
-
-<!-- Additional context, constraints, or details from spec -->
 
 ## History
 
 <!-- Keep this updated. Earliest to Latest -->
+
+- **2026-08-25** — UI Tweaks (`ui-tweaks` branch): a grab-bag of visual polish requested
+  incrementally, committed in small independently-reviewable steps. (1) Redesigned
+  `GameCard.tsx` to match a prior version of the app (`context/screenshots/game-cards.png`)
+  — added a "Condition" pill (media status: Incomplete/Complete/New/Digital, always shown)
+  and a "Status" pill (playable status: Backlog/Playing/Finished, shown only for non-default
+  states — "Owned" shows no pill, per explicit user confirmation matching the old
+  screenshot's behavior), reusing the existing tested `mapBooleansToMediaStatus`/
+  `resolveGameStatus` helpers from `lib/game-utils.ts` rather than inventing new mapping
+  logic; kept the existing rating badge untouched. Added a notes-hover tooltip (new
+  `components/ui/tooltip.tsx`, a standard shadcn-style wrapper around the already-installed
+  `radix-ui` package's Tooltip primitive — no new dependency), shown only when a game has
+  `notes`, keyboard-focusable (not just hover) per this app's stated a11y bar. New pill
+  colors needed 7 new CSS tokens in `globals.css`; caught one real bug during live
+  verification where two of them (`--condition-digital`/`--condition-new`) were aliased
+  through a second `var()` indirection to the existing chart tokens and Tailwind v4 silently
+  failed to generate the utility class (background rendered fully transparent) — fixed by
+  using literal hex values instead, same pattern as the rest of the working tokens. (2) Made
+  the navbar sticky (`sticky top-0`) with a translucent background (`bg-background/85`) and
+  a shadow that fades in via a scroll listener once the page scrolls past the top; gave
+  `<main>` a new `--surface` token, a subtle step lighter than `--background` but darker than
+  `--card`, so the content area reads as subtly distinct from the navbar/footer chrome. Fixed
+  the mobile hamburger menu, which was a normal-flow sibling inside `<header>` and pushed
+  page content down when opened — changed it to `absolute inset-x-0 top-full` with its own
+  `bg-background/95 backdrop-blur-sm shadow-lg` so it now floats over the page instead of
+  displacing it, verified live at 375px (opens/closes without scroll-jump, closes cleanly).
+  (3) Recolored every real content card's ring (`BrandCard`, `ConsoleCard`, `GameCard`,
+  `GenresTable`, the shared `ui/card.tsx` used by dashboard `StatCard`/`ChartCard`/login,
+  loading skeletons, empty-state boxes) plus the navbar's bottom border and footer's top
+  border to a new `--divider` token, first `#2a728c` — deliberately scoped to exclude
+  floating overlays (`Dialog`, `AlertDialog`, `DropdownMenu`, `Select`, `Tooltip`, which kept
+  `ring-foreground/30`) per explicit user confirmation, since those share the same Tailwind
+  class today but are a different UI concept. Then, per a follow-up explicit request, changed
+  `--divider` to `#0e2e39` and extended it to the previously-excluded overlays too. Flagged
+  (with computed contrast numbers, ~1.24:1 against card backgrounds and ~1.35:1 against the
+  page background, both well under the 3:1 WCAG UI-component minimum the prior contrast-fix
+  feature explicitly targeted) that this color is barely visible — confirmed live in the
+  browser — but user explicitly confirmed keeping it as specified after seeing the numbers,
+  so shipped as-is; not a bug, a deliberate design choice. (4) One small change was made
+  directly by the user outside the assistant session: `app/layout.tsx`'s `<main>` padding
+  changed from `px-8` to `px-4 md:px-8` for better mobile margins. Verified at each step via
+  live Playwright checks against the real dev server (desktop + 375px mobile, hover and
+  keyboard-focus tooltip states, scroll-triggered shadow, computed `getComputedStyle` color
+  checks rather than just visual screenshots) — no schema/DB changes anywhere in this branch,
+  all presentation-only. `npm run lint`, `npx tsc --noEmit`, `npm test` (174/174), and
+  `npm run build` all pass at every commit.
 
 - **2026-08-25** — UI Contrast, Modal & Responsiveness Fixes: fixed 5 issues found
   by a live Playwright-driven UI review (not just static code reading — computed

@@ -63,7 +63,7 @@ const FOOTER_LINKS: FooterLink[] = [
 
 export function Footer() {
   return (
-    <footer className="border-t border-border bg-background">
+    <footer className="border-t border-divider bg-background">
       <div className="mx-auto flex h-15 w-full max-w-330 items-center justify-center gap-6 px-4 sm:px-8">
         <span className="text-sm text-muted-foreground">
           2026 Kevin Fallas

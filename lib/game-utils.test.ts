@@ -2,6 +2,8 @@ import { ZodError } from "zod";
 import { describe, expect, it } from "vitest";
 import { AppError } from "@/lib/app-error";
 import {
+  GAME_STATUS_LABELS,
+  MEDIA_STATUS_LABELS,
   gameConsoleIdSchema,
   gameDeveloperSchema,
   gameGenreIdsSchema,
@@ -219,6 +221,30 @@ describe("resolveGameStatus", () => {
     expect(
       resolveGameStatus({ isFinished: false, isPlaying: false, isBacklog: false })
     ).toBe("OWNED");
+  });
+});
+
+describe("MEDIA_STATUS_LABELS", () => {
+  it("has a label for every media status", () => {
+    (["incomplete", "complete", "new", "digital"] as const).forEach((status) => {
+      expect(MEDIA_STATUS_LABELS[status]).toBeTruthy();
+    });
+  });
+
+  it("uses the exact reference-screenshot wording", () => {
+    expect(MEDIA_STATUS_LABELS.complete).toBe("Complete");
+  });
+});
+
+describe("GAME_STATUS_LABELS", () => {
+  it("has a label for every game status", () => {
+    (["WISHLIST", "BACKLOG", "OWNED", "PLAYING", "COMPLETED"] as const).forEach((status) => {
+      expect(GAME_STATUS_LABELS[status]).toBeTruthy();
+    });
+  });
+
+  it("labels COMPLETED as 'Finished', matching the reference screenshot", () => {
+    expect(GAME_STATUS_LABELS.COMPLETED).toBe("Finished");
   });
 });
 
